@@ -1,28 +1,37 @@
 from .athlete import Athlete
 import math
+import json
+import os
 
 class IMTP_Calculations:
 
-    def __init__(self, athlete, target_knee_angle_deg=135, quadriceps_offset=7):
+    def __init__(self, athlete, quadriceps_offset=7):
         
         self.athlete = athlete
-        self.target_knee_angle = target_knee_angle_deg
         self.quadriceps_offset = quadriceps_offset
-        self.alfa_angle_rad = math.radians(target_knee_angle_deg)
 
         self.ankle_offset = (athlete.foot_length/2) - athlete.heel_ankle_length
         
-        self.beta_angle_rad = math.atan((2*self.quadriceps_offset)/athlete.thigh_length)
-        self.l1 = math.sqrt((athlete.thigh_length/2)**2 + self.quadriceps_offset**2)
-        self.omega_angle_rad = self.alfa_angle_rad + self.beta_angle_rad
-        self.l2 = math.sqrt(self.l1**2 + athlete.shin_length**2 - (2 * self.l1 * athlete.shin_length * math.cos(self.omega_angle_rad)))
-        self.h = math.sqrt(self.l2**2 - self.ankle_offset**2)
+    
+    def update_geometry(self, knee_angle_rad, l1):
 
-        self.gamma_angle_rad = math.acos((self.l1**2 + athlete.trunk_length**2 - athlete.arm_length**2) / (2 * self.l1 * athlete.trunk_length))
-        self.delta_angle_rad = self.gamma_angle_rad + self.beta_angle_rad
+        self.l1 = l1
+        self.alfa_angle_rad = knee_angle_rad        
 
-        self.theta_angle_rad = math.asin(self.h / self.l2)
-        self.lambda_angle_rad = math.acos((self.athlete.shin_length**2 + self.l2**2 - self.l1**2) / (2 * self.athlete.shin_length * self.l2))  
+        self.beta_angle_rad = math.asin(self.quadriceps_offset/self.l1)
+        self.omega_angle_rad = knee_angle_rad + self.beta_angle_rad
+
+        self.l2 = math.sqrt(self.l1**2 + self.athlete.thigh_length**2 - (2 * self.l1 * self.athlete.thigh_length * math.cos(self.beta_angle_rad)))
+        self.psi_angle_rad = math.asin(self.quadriceps_offset/self.l2)
+
+        self.l3 = math.sqrt(self.l1**2 + self.athlete.shin_length**2 - (2 * self.l1 * self.athlete.shin_length * math.cos(self.omega_angle_rad)))
+        self.h = math.sqrt(self.l3**2 - self.ankle_offset**2)
+
+        self.gamma_angle_rad = math.acos((self.l2**2 + self.athlete.trunk_length**2 - self.athlete.arm_length**2) / (2 * self.l2 * self.athlete.trunk_length))
+        self.delta_angle_rad = self.gamma_angle_rad + self.psi_angle_rad
+
+        self.theta_angle_rad = math.asin(self.h / self.l3)
+        self.lambda_angle_rad = math.acos((self.athlete.shin_length**2 + self.l3**2 - self.l1**2) / (2 * self.athlete.shin_length * self.l3))  
         self.epsilon_angle_rad = self.theta_angle_rad - self.lambda_angle_rad
 
 
@@ -31,37 +40,6 @@ class IMTP_Calculations:
         bar_height = self.h + self.athlete.ankle_height
 
         return bar_height
-    
-
-    def ankle_angle_OG(self):
-        A = self.l1
-        S = self.athlete.shin_length
-        O2 = self.ankle_offset
-        H = self.h
-
-        K1 = A**2 + S**2 + O2**2 - 2*A*S * math.cos(self.omega_angle_rad) - H**2
-        K2 = 2 * H
-        K3 = 2*S - 2*A * math.cos(self.omega_angle_rad)
-
-        a = K3**2 - K2**2
-        b = -2 * K1 * K2
-        c = (K3**2 * O2**2) - K1**2
-
-        D = b**2 - 4*a*c
-
-        H1_a = (-b + math.sqrt(D)) / (2*a)
-        H1_b = (-b - math.sqrt(D)) / (2*a)
-        
-        if 0 < H1_a < H:
-            H1 = H1_a
-        elif 0 < H1_b < H:
-            H1 = H1_b
-             
-        epsilon_rad = math.atan(H1 / O2)
-        epsilon_deg = math.degrees(epsilon_rad)
-        ankle_angle = epsilon_deg
-
-        return ankle_angle
     
 
     def segment_angles(self):
@@ -104,4 +82,158 @@ class IMTP_Calculations:
         final_positon += shoulder_projection
 
         return final_positon
+    
+    
+    def asign_possible_rack_numbers(self):
 
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(current_dir, 'iso_rack_w_board.json')
+
+        with open(file_path) as f:
+            rack_data = json.load(f)
+        
+        possible_rack_numbers = {}
+
+        lower_height_bound = self.athlete.ankle_height + math.cos(math.radians(30)) * self.athlete.shin_length
+        upper_height_bound = self.athlete.ankle_height + self.athlete.shin_length + self.athlete.thigh_length
+
+        for key, value in rack_data.items():
+
+            if lower_height_bound < value < upper_height_bound:
+
+                possible_rack_numbers[key] = value
+        
+        return possible_rack_numbers
+
+
+    def rank_rack_heights(self):
+
+        rack_positions = self.asign_possible_rack_numbers()
+        result_dict = {}
+
+        vertical_arm_reach = math.sqrt(self.athlete.arm_length**2 - self.quadriceps_offset**2)
+        bar_distance_below_hip = max(vertical_arm_reach - self.athlete.trunk_length, 0)
+        bar_distance_above_knee = self.athlete.thigh_length - bar_distance_below_hip
+        limit_min_l1 = self.athlete.thigh_length / 3
+        limit_max_l1 = math.sqrt(bar_distance_above_knee**2 + self.quadriceps_offset**2)
+
+        for rack_position, rack_bar_height in rack_positions.items():
+
+            min_knee_angle = math.radians(100)
+            max_knee_angle = math.radians(170)
+
+            for _ in range(20):
+
+                current_knee_angle = (min_knee_angle + max_knee_angle) / 2
+                min_l1 = limit_min_l1
+                max_l1 = limit_max_l1
+                valid_solution_found = False
+
+                for _ in range(20):
+                    
+                    current_l1 = (max_l1 + min_l1) / 2
+
+                    try:
+                        
+                        self.update_geometry(current_knee_angle, current_l1)
+
+                        height_at_top = self.h + self.athlete.ankle_height
+
+                        diff = height_at_top - rack_bar_height
+
+                        if abs(diff) < 0.1:
+                            valid_solution_found = True
+                            break
+                        
+                        elif diff > 0:
+                            max_l1 = current_l1
+
+                        elif diff < 0:
+                            min_l1 = current_l1
+                           
+                    except ValueError:
+                        break
+                
+                if valid_solution_found:
+
+                    acromion_position = self.acromion_position()
+                    target_acromion_position = 0
+
+                    diff = acromion_position - target_acromion_position
+
+                    
+                    if abs(diff) < 1:
+                        
+                        ideal_knee_angle = math.radians(135)
+                        ideal_hip_angle = math.radians(145)
+                        
+                        diff_knee_angle = abs(current_knee_angle - ideal_knee_angle)
+                        diff_hip_angle = abs(self.delta_angle_rad - ideal_hip_angle)
+
+                        error_knee = diff_knee_angle / ideal_knee_angle
+                        error_hip = diff_hip_angle / ideal_hip_angle
+
+                        thigh_uncovered_distance = math.sqrt(current_l1**2 - self.quadriceps_offset**2)
+                        thigh_uncovered_ratio = thigh_uncovered_distance / self.athlete.thigh_length
+
+                        score = (1.5 * error_knee)**2 + error_hip**2
+
+                        curent_rack_result = {
+                            'l1': current_l1,
+                            'thigh_uncovered': str(f'{thigh_uncovered_ratio*100:.0f}%'),
+                            'knee_angle': math.degrees(current_knee_angle),
+                            'hip_angle': math.degrees(self.delta_angle_rad),
+                            'score': score
+                        }
+                        
+                        result_dict[rack_position] = curent_rack_result
+
+                        if abs(diff) < 0.1:
+                            break
+                    
+                    if diff > 0:
+                        max_knee_angle = current_knee_angle
+                    
+                    elif diff < 0:
+                        min_knee_angle = current_knee_angle
+                
+                else:
+                    try:
+                        self.update_geometry(current_knee_angle, limit_max_l1)
+                        height_at_top = self.h + self.athlete.ankle_height
+                
+                    except ValueError:
+                        height_at_top = - float('inf')
+
+                    try:
+                        self.update_geometry(current_knee_angle, limit_min_l1)
+                        height_at_bottom = self.h + self.athlete.ankle_height
+
+                    except ValueError:
+                        height_at_bottom = float('inf') 
+
+                    if height_at_top < rack_bar_height:
+                        min_knee_angle = current_knee_angle
+
+                    elif height_at_bottom > rack_bar_height:
+                        max_knee_angle = current_knee_angle
+
+                    else:
+                        break        
+
+        if not result_dict:
+            return None
+        
+        return result_dict
+    
+
+    def find_best_rack_height(self):
+
+        result_dict = self.rank_rack_heights()
+
+        sorted_results = sorted(result_dict.items(), key=lambda x: x[1]['score'])
+        best_rack_height = sorted_results[0]
+        second_best_rack_height = sorted_results[1]
+
+        return best_rack_height, second_best_rack_height
+        
