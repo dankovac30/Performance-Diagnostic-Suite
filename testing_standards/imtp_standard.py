@@ -68,24 +68,24 @@ class IMTP_Calculations:
 
         shin_incline, thigh_incline, trunk_incline = self.segment_inclination()
         
-        final_positon = - self.ankle_offset
+        final_position = - self.ankle_offset
 
         knee_projection = math.cos(shin_incline) * self.athlete.shin_length
-        final_positon += knee_projection
+        final_position += knee_projection
 
         hip_projection = math.cos(thigh_incline) * self.athlete.thigh_length
-        final_positon += hip_projection
+        final_position += hip_projection
 
         shoulder_projection = math.cos(trunk_incline) * self.athlete.trunk_length
-        final_positon += shoulder_projection
+        final_position += shoulder_projection
 
-        return final_positon
+        return final_position
     
     
     def asign_possible_rack_numbers(self):
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_dir, 'iso_rack_TEST_1cm.json')
+        file_path = os.path.join(current_dir, 'iso_rack_w_board.json')
 
         with open(file_path) as f:
             rack_data = json.load(f)
@@ -180,7 +180,7 @@ class IMTP_Calculations:
                         knee_overhang = (math.cos(self.epsilon_angle_rad) * self.athlete.shin_length) - self.ankle_offset
 
 
-                        curent_rack_result = {
+                        current_rack_result = {
                             'l1': current_l1,
                             'thigh_uncovered': str(f'{thigh_uncovered_ratio*100:.0f}%'),
                             'knee_angle': math.degrees(current_knee_angle),
@@ -189,7 +189,7 @@ class IMTP_Calculations:
                             'score': score
                         }
                         
-                        result_dict[rack_position] = curent_rack_result
+                        result_dict[rack_position] = current_rack_result
 
                         if abs(diff) < 0.1:
                             break
