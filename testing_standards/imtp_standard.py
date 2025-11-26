@@ -5,11 +5,9 @@ import os
 
 class IMTP_Calculations:
 
-    def __init__(self, athlete, quadriceps_offset=7):
+    def __init__(self, athlete):
         
         self.athlete = athlete
-        self.quadriceps_offset = quadriceps_offset
-
         self.ankle_offset = (athlete.foot_length/2) - athlete.heel_ankle_length
         
     
@@ -18,11 +16,11 @@ class IMTP_Calculations:
         self.l1 = l1
         self.alfa_angle_rad = knee_angle_rad        
 
-        self.beta_angle_rad = math.asin(self.quadriceps_offset/self.l1)
+        self.beta_angle_rad = math.asin(self.athlete.quadriceps_offset/self.l1)
         self.omega_angle_rad = knee_angle_rad + self.beta_angle_rad
 
         self.l2 = math.sqrt(self.l1**2 + self.athlete.thigh_length**2 - (2 * self.l1 * self.athlete.thigh_length * math.cos(self.beta_angle_rad)))
-        self.psi_angle_rad = math.asin(self.quadriceps_offset/self.l2)
+        self.psi_angle_rad = math.asin(self.athlete.quadriceps_offset/self.l2)
 
         self.l3 = math.sqrt(self.l1**2 + self.athlete.shin_length**2 - (2 * self.l1 * self.athlete.shin_length * math.cos(self.omega_angle_rad)))
         self.h = math.sqrt(self.l3**2 - self.ankle_offset**2)
@@ -58,7 +56,7 @@ class IMTP_Calculations:
     
 
     def segment_inclination(self):
-        
+     
         shin_incline = self.epsilon_angle_rad
         thigh_incline = shin_incline + (math.radians(180) - self.alfa_angle_rad)
         trunk_incline = thigh_incline - (math.radians(180) - self.delta_angle_rad)
@@ -87,7 +85,7 @@ class IMTP_Calculations:
     def asign_possible_rack_numbers(self):
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_dir, 'iso_rack_w_board.json')
+        file_path = os.path.join(current_dir, 'iso_rack_TEST_1cm.json')
 
         with open(file_path) as f:
             rack_data = json.load(f)
@@ -111,11 +109,11 @@ class IMTP_Calculations:
         rack_positions = self.asign_possible_rack_numbers()
         result_dict = {}
 
-        vertical_arm_reach = math.sqrt(self.athlete.arm_length**2 - self.quadriceps_offset**2)
+        vertical_arm_reach = math.sqrt(self.athlete.arm_length**2 - self.athlete.quadriceps_offset**2)
         bar_distance_below_hip = max(vertical_arm_reach - self.athlete.trunk_length, 0)
         bar_distance_above_knee = self.athlete.thigh_length - bar_distance_below_hip
         limit_min_l1 = self.athlete.thigh_length / 3
-        limit_max_l1 = math.sqrt(bar_distance_above_knee**2 + self.quadriceps_offset**2)
+        limit_max_l1 = math.sqrt(bar_distance_above_knee**2 + self.athlete.quadriceps_offset**2)
 
         for rack_position, rack_bar_height in rack_positions.items():
 
@@ -173,16 +171,21 @@ class IMTP_Calculations:
                         error_knee = diff_knee_angle / ideal_knee_angle
                         error_hip = diff_hip_angle / ideal_hip_angle
 
-                        thigh_uncovered_distance = math.sqrt(current_l1**2 - self.quadriceps_offset**2)
+                        thigh_uncovered_distance = math.sqrt(current_l1**2 - self.athlete.quadriceps_offset**2)
                         thigh_uncovered_ratio = thigh_uncovered_distance / self.athlete.thigh_length
 
                         score = (1.5 * error_knee)**2 + error_hip**2
+
+
+                        knee_overhang = (math.cos(self.epsilon_angle_rad) * self.athlete.shin_length) - self.ankle_offset
+
 
                         curent_rack_result = {
                             'l1': current_l1,
                             'thigh_uncovered': str(f'{thigh_uncovered_ratio*100:.0f}%'),
                             'knee_angle': math.degrees(current_knee_angle),
                             'hip_angle': math.degrees(self.delta_angle_rad),
+                            'knee_overhang': knee_overhang,
                             'score': score
                         }
                         
