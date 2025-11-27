@@ -15,7 +15,7 @@ The solution consists of a biomechanical computation engine (`imtp_standard.py`)
 
 1.  **Anthropometric Input:** The user enters specific body measurements (foot, shin, thigh, trunk, arm lengths).
 
-2.  **Inverse Kinematics Solver:** The core class `IMTP_Calculations` uses a nested binary search algorithm to simulate thousands of potential body positions within the specific geometry of the ISO rack.
+2.  **Inverse Kinematics Solver:** The core class `IMTP_Calculations` uses a nested binary search algorithm to simulate thousands of potential body positions within the specific geometry of the ISO rack. A sketch of the setup is included in the screenshots folder.
 
 3.  **Optimization Logic:** The algorithm searches for a rack height that satisfies multiple constraints:
     * **Knee Angle:** Targets ~135°.
