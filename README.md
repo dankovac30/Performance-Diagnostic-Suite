@@ -20,8 +20,8 @@ Here is an overview of the projects included in this suite. More detailed inform
 * **About:** The main desktop application of the suite. Built with Tkinter, it enables coaches to perform "what-if" analyses of sprint performance based on an athlete’s Force–Velocity profile (F₀, V₀) and anthropometric parameters.
 
 #### 🔬 Testing Standards
-* **Status:** `Planned`
-* **About:** A future tool to help standardize testing protocols.
+* **Status:** `Released`
+* **About:** A biomechanical tools that standardize diverse performance tests by using inverse kinematics to generate athlete-specific setups and positions based on anthropometry, ensuring consistent and reliable data.
 
 #### 🗃️ Performance Hub
 * **Status:** `Planned`
