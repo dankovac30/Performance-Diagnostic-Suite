@@ -236,7 +236,6 @@ class IMTP_Calculations:
 
         sorted_results = sorted(result_dict.items(), key=lambda x: x[1]['score'])
         best_rack_height = sorted_results[0]
-        second_best_rack_height = sorted_results[1]
 
-        return best_rack_height, second_best_rack_height
+        return best_rack_height
         
