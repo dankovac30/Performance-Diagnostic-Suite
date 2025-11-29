@@ -49,7 +49,8 @@ This tool is designed to be used as a standalone desktop application.
 
 #### Running the GUI:
 
-To start the application for daily use in the gym/lab:
+The app must be run as a module from the root folder of the repository.
+
 
 ```bash
-python app.py
+python -m testing_standards.app
