@@ -1,4 +1,4 @@
-from sprint_simulator_core.simulator import SprintSimulation
+from sprint_science.simulator import SprintSimulation
 
 def run_simulation_logic(f0, v0, weight, height):
 
