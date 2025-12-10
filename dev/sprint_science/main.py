@@ -9,7 +9,7 @@ F0 = 8
 V0 = 11.5
 weight = 83
 height = 1.85
-running_distance = 200
+running_distance = 100
 external_force = 0
 fly_length = 30
 

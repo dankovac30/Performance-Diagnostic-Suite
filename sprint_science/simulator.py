@@ -2,10 +2,11 @@ import math
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from sprint_science.physics import calculate_frontal_area, calculate_air_density, calculate_air_resistance_force
 
 class SprintSimulation:
     
-    def __init__(self, F0, V0, weight, height, running_distance, wind_speed=0.0, temperature_c=15.0, barometric_preassure_hpa=1013.25, external_force_N=0, fly_length=30, sex='M', fatigue_toggle='ON', fatigue_threshold=None, fatigue_strength=None):
+    def __init__(self, F0, V0, weight, height, running_distance, wind_speed=0.0, temperature_c=20.0, barometric_preassure_hpa=1013.25, external_force_N=0, fly_length=30, sex='M', fatigue_toggle='ON', fatigue_threshold=None, fatigue_strength=None):
         self.F0 = F0
         self.V0 = V0
         self.weight = weight
@@ -21,8 +22,11 @@ class SprintSimulation:
         # minimum time increment  
         self.dt = 0.001
 
-        # body surface area (Du Bois 1916), converted to frontal area *0.266 (Pugh 1971)
-        self.A = 0.2025 * (self.height ** 0.725) * (self.weight ** 0.425) * 0.266
+        # body frontal area
+        self.A = calculate_frontal_area(self.height, self.weight)
+
+        # air density
+        self.rho = calculate_air_density(self.temperature_c, self.barometric_preassure_hpa)
 
         # fatigue setup
         men_fatigue_settings = (5.16, 39.5)
@@ -56,20 +60,7 @@ class SprintSimulation:
             self.results_df = self.run_sprint()
         
         return self.results_df
-    
-
-    def calculate_air_density(self):
-        rho0 = 1.293
-        p_std_torr = 760.0
-        t_std_kelvin = 273.0
-
-        temperature_kelvin = t_std_kelvin + self.temperature_c
-        preassure_torr = self.barometric_preassure_hpa * (p_std_torr / 1013.25)
-
-        rho = rho0 * (preassure_torr / p_std_torr) * (t_std_kelvin / temperature_kelvin)
-
-        return rho
-    
+     
 
     def run_sprint(self):
         
@@ -77,10 +68,6 @@ class SprintSimulation:
         F0 = self.F0
         V0 = self.V0
         original_V0 = self.V0
-
-        # air resistance constants
-        Cd = 0.9     # (van IngenSchenauetal. 1991)
-        rho = self.calculate_air_density()
 
         # initial state
         time = 0
@@ -108,8 +95,7 @@ class SprintSimulation:
                 f_bend = 0
 
             # air resistance
-            relative_speed = speed - self.wind_speed
-            f_resistance = 0.5 * rho * self.A * Cd * (relative_speed * abs(relative_speed))
+            f_resistance = calculate_air_resistance_force(speed, self.rho, self.A, self.wind_speed)
 
             # resultant propulsive force
             f_resultant = f_propulsion - f_resistance - f_bend - self.external_force_N
