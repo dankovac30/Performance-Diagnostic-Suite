@@ -1,4 +1,4 @@
-from sprint_simulator_core.simulator import SprintSimulation
+from sprint_science.simulator import SprintSimulation
 
 
 def find_profile_for_time(target_time, sfv, height, weight, running_distance=100):

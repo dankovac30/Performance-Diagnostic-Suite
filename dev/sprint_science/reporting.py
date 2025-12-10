@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from sprint_simulator_core.simulator import SprintSimulation
+from sprint_science.simulator import SprintSimulation
 import time
 import pandas as pd
 import math

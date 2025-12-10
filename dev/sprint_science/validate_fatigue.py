@@ -1,4 +1,4 @@
-from sprint_simulator_core.simulator import SprintSimulation
+from sprint_science.simulator import SprintSimulation
 import numpy as np
 import json
 import math
