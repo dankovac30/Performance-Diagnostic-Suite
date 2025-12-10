@@ -5,7 +5,7 @@ import numpy as np
 
 class SprintSimulation:
     
-    def __init__(self, F0, V0, weight, height, running_distance, wind_speed=0.0, temperature_c=15.0, barometric_preassure_hpa=1013.25, external_force_N=0, unloaded_speed=None, fly_length=30, sex='M', fatigue_threshold=None, fatigue_strength=None):
+    def __init__(self, F0, V0, weight, height, running_distance, wind_speed=0.0, temperature_c=15.0, barometric_preassure_hpa=1013.25, external_force_N=0, fly_length=30, sex='M', fatigue_threshold=None, fatigue_strength=None):
         self.F0 = F0
         self.V0 = V0
         self.weight = weight
@@ -15,7 +15,6 @@ class SprintSimulation:
         self.temperature_c = temperature_c
         self.barometric_preassure_hpa = barometric_preassure_hpa
         self.external_force_N = external_force_N
-        self.unloaded_speed = unloaded_speed
         self.fly_length = fly_length
   
         # minimum time increment  
@@ -336,36 +335,11 @@ class SprintSimulation:
         return f_v_slopes_resuls_df
         
 
-    def drag_coeficient_calibration(self):
-        
-        # last calibration
-        # values = [0.8789, 0.877, 0.8553, 0.8624, 0.8857, 0.9045, 0.8768, 0.8732, 0.8707, 0.8752, 0.8808, 0.8753, 0.8928, 0.8761, 0.8789, 0.8807, 0.8836, 0.8954, 0.8921, 0.8799, 0.874, 0.8738, 0.8773]
-
-        drag_coeficient = None
-        smallest_error = float('inf')
-        
-        for i in range(8500, 9500):
-            
-            drag_coeficient_loop = i / 10000
-            
-            temp_simulation = SprintSimulation(F0=self.F0, V0=self.V0, weight=self.weight, height=self.height, running_distance=100, external_force_N=0, drag_coeficient=drag_coeficient_loop)
-
-            speed_loop = temp_simulation.top_speed()
-
-            current_error = abs(self.unloaded_speed - speed_loop['top_speed'])
-            
-            if current_error < smallest_error:
-                smallest_error = current_error
-                drag_coeficient = drag_coeficient_loop
-                
-        return drag_coeficient
-
-
     def overspeed_zones(self):
                 
         overspeed_zones = []
         baseline_sim = SprintSimulation(F0=self.F0, V0=self.V0, weight=self.weight, height=self.height, running_distance=100, external_force_N=0)
-        unloaded_speed = baseline_sim.top_speed()['top_speed']
+        unloaded_top_speed = baseline_sim.top_speed()['top_speed']
 
         for i in range(1, 200):
             
@@ -374,7 +348,7 @@ class SprintSimulation:
             temp_simulation = SprintSimulation(F0=self.F0, V0=self.V0, weight=self.weight, height=self.height, running_distance=100, external_force_N=external_force_N)
 
             top_speed = temp_simulation.top_speed()['top_speed']
-            speed_gain = top_speed / unloaded_speed
+            speed_gain = top_speed / unloaded_top_speed
 
             overspeed_zones.append({
                 'external_force_N': external_force_N,
