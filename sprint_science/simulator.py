@@ -5,7 +5,7 @@ import numpy as np
 
 class SprintSimulation:
     
-    def __init__(self, F0, V0, weight, height, running_distance, wind_speed=0.0, temperature_c=15.0, barometric_preassure_hpa=1013.25, external_force_N=0, fly_length=30, sex='M', fatigue_threshold=None, fatigue_strength=None):
+    def __init__(self, F0, V0, weight, height, running_distance, wind_speed=0.0, temperature_c=15.0, barometric_preassure_hpa=1013.25, external_force_N=0, fly_length=30, sex='M', fatigue_toggle='ON', fatigue_threshold=None, fatigue_strength=None):
         self.F0 = F0
         self.V0 = V0
         self.weight = weight
@@ -16,6 +16,7 @@ class SprintSimulation:
         self.barometric_preassure_hpa = barometric_preassure_hpa
         self.external_force_N = external_force_N
         self.fly_length = fly_length
+        self.fatigue_toggle = fatigue_toggle
   
         # minimum time increment  
         self.dt = 0.001
@@ -116,7 +117,7 @@ class SprintSimulation:
             # acceleration
             acceleration = f_resultant / self.weight
 
-            if acceleration < 0.05 and not fatigie_active:
+            if acceleration < 0.05 and not fatigie_active and self.fatigue_toggle == 'ON':
                 fatigie_active = True
 
             if fatigie_active:

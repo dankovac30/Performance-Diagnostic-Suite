@@ -9,12 +9,11 @@ F0 = 8
 V0 = 11.5
 weight = 83
 height = 1.85
-running_distance = 100
+running_distance = 200
 external_force = 0
-unloaded_speed = 10.5
 fly_length = 30
 
-profile = {'F0': F0, 'V0': V0, 'weight': weight, 'height': height, 'running_distance': running_distance, 'external_force_N': external_force, 'unloaded_speed': unloaded_speed, 'fly_length': fly_length}
+profile = {'F0': F0, 'V0': V0, 'weight': weight, 'height': height, 'running_distance': running_distance, 'external_force_N': external_force, 'fly_length': fly_length}
 
 # saved profiles
 jara1 = {'F0': 7.68, 'V0': 10.51, 'weight': 74, 'height': 1.84, 'running_distance': 100, 'external_force_N': 0, 'fly_length': 30}
@@ -46,7 +45,7 @@ bolt = {'F0': 9, 'V0': 13, 'weight': 94, 'height': 1.95, 'running_distance': 100
 
 
 #profile picker
-profile = bolt
+profile = profile
 
 analyza = SprintSimulation(**profile)
 
