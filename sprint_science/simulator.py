@@ -79,7 +79,9 @@ class SprintSimulation:
         time_list = []
         distance_list = []
         speed_list = []
-        acceleration_list = []        
+        acceleration_list = []
+        propulsion_force_list = []
+                
 
         while covered_distance < self.running_distance:
 
@@ -115,6 +117,8 @@ class SprintSimulation:
             distance_list.append(covered_distance)
             speed_list.append(speed)
             acceleration_list.append(acceleration)
+            propulsion_force_list.append(f_propulsion)
+            
             
             # update
             covered_distance += (speed * self.dt)
@@ -129,7 +133,8 @@ class SprintSimulation:
             'time': time_list,
             'distance': distance_list,
             'speed': speed_list,
-            'acceleration': acceleration_list
+            'acceleration': acceleration_list,
+            'propulsion_force': propulsion_force_list
         }
 
         self.results_df = pd.DataFrame(results)
