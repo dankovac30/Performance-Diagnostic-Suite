@@ -17,3 +17,5 @@ venv/
 *.db
 
 *.csv
+
+*.xlsx
