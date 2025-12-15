@@ -44,6 +44,7 @@ class SprintProfilation:
         self.frontal_area = calculate_frontal_area(height, weight)
         self.air_density = calculate_air_density(temperature_c, barometric_pressure_hpa)
 
+
     @staticmethod    
     def morin_velocity_model(t: np.ndarray, vmax: float, tau: float, t0: float) -> np.ndarray:
         """
@@ -52,6 +53,7 @@ class SprintProfilation:
         """
         return np.where(t > t0, vmax * (1 - np.exp(-(t - t0) / tau)), 0)
     
+
     def fit_morin(self, v_data: np.ndarray, t_data: np.ndarray) -> Tuple[np.ndarray, np.ndarray, Dict[str, float]]:
         """
         Fits the Morin velocity model to the measured velocity data using non-linear least squares.
@@ -76,6 +78,7 @@ class SprintProfilation:
         params = {'Tau': tau, 't0': t0, 'V_max': vmax}
 
         return model_speed, model_acc, params
+
 
     def smooth_filter(self,
                       raw_spatiometric_data: pd.DataFrame,
@@ -111,11 +114,13 @@ class SprintProfilation:
 
         return y
 
+
     def find_speed_plateau(self, smooth_speed_array: np.ndarray) -> int:
         """Identifies the index where the athlete reaches maximum velocity."""
         idx_peak_speed = np.argmax(smooth_speed_array)
 
         return idx_peak_speed
+
 
     def calculate_Rfmax_DRF(self, F0: float, V0: float) -> Tuple[float, float]:
         """
