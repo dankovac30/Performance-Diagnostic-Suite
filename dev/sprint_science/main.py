@@ -5,10 +5,10 @@ from .validate_fatigue import validate_fatigue, get_100_200_times
 from . import reporting
 
 
-F0 = 8
-V0 = 11.5
-weight = 83
-height = 1.85
+F0 = 7.61
+V0 = 9.99
+weight = 66.4
+height = 170
 running_distance = 100
 external_force = 0
 fly_length = 30
@@ -47,13 +47,13 @@ bolt = {'F0': 9, 'V0': 13, 'weight': 94, 'height': 1.95, 'running_distance': 100
 #profile picker
 profile = profile
 
-analyza = SprintSimulation(**profile)
+analyza = SprintSimulation(**profile, wind_speed=2)
 
 #reporting.complete_report(analyza)
 
-reporting.segment_report(analyza)
+#reporting.segment_report(analyza)
 
-#reporting.top_speed_report(analyza)
+reporting.top_speed_report(analyza)
 
 #reporting.flying_sections_report(analyza)
 
