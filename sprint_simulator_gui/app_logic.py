@@ -1,17 +1,28 @@
 from sprint_science.simulator import SprintSimulation
+import pandas as pd
+from typing import Tuple, Dict, Any
 
-def run_simulation_logic(f0, v0, weight, height):
+def run_simulation_logic(F0: float, V0: float, weight: float, height: float) -> Tuple[Dict[str, Any], pd.DataFrame]:
+    """
+    Controller logic bridging the GUI inputs and the Physics Engine.
 
-    #fixed variables
+    Returns:
+        Tuple[Dict[str, Any], pd.DataFrame]: 
+            - results: Dictionary containing calculated metrics (Time 100m, Fly 30m, Top Speed, etc.).
+            - report: Full pandas DataFrame with frame-by-frame simulation data.
+    """
+    # Standard testing parameters
     running_distance = 100.0
     external_force_N = 0.0
     fly_length = 30.0
 
-    f0_clean = f0.replace(",", ".")
-    v0_clean = v0.replace(",", ".")
+    # Input sanitization
+    f0_clean = F0.replace(",", ".")
+    v0_clean = V0.replace(",", ".")
     weight_clean = weight.replace(",", ".")
     height_clean = height.replace(",", ".")
 
+    # Type conversion and validation
     try:
         f0_f = float(f0_clean)
         v0_f = float(v0_clean)
@@ -32,9 +43,10 @@ def run_simulation_logic(f0, v0, weight, height):
         
     if weight_f <= 0:
         raise ValueError("Weight must be a positive number (greater than 0).")
-        
+    
+    # Simulation
     try:
-        data = SprintSimulation(
+        athlete = SprintSimulation(
             F0 = f0_f,
             V0 = v0_f,
             weight = weight_f,
@@ -43,16 +55,17 @@ def run_simulation_logic(f0, v0, weight, height):
             external_force_N = external_force_N,
             fly_length = fly_length
     )
+        # Run simulation
+        data = athlete.run_sprint()
 
-        report = data.run_sprint()
-        running_time = report['time'].iloc[-1]
-        top_speed = data.top_speed()
-        fly_segment = data.flying_sections()
+        # Metrics extraction
+        running_time = data['time'].iloc[-1]
+        top_speed = athlete.top_speed()
+        fly_segment = athlete.flying_sections()
         fly_time = str(f'{fly_segment['first_fast']['time']:.2f} s')
         fly_start = str(f'{fly_segment['first_fast']['start']:.0f} m')
         fly_finish = str(f'{fly_segment['first_fast']['finish']:.0f} m')
-        time_30_m = report[report['distance'] > 30]['time'].iloc[0]
-
+        time_30_m = data[data['distance'] > 30]['time'].iloc[0]
 
         results = {
             'running_time_100m' : running_time,
@@ -64,7 +77,7 @@ def run_simulation_logic(f0, v0, weight, height):
             'top_speed_distance' : top_speed['distance_top_speed']
         }
 
-        return results, report
+        return results, data
     
     except Exception as e:
         raise Exception(f'An error occurred during simulation: {e}')
