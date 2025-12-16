@@ -1,77 +1,98 @@
-# ⚙️ Sprint Simulator Core
+# ⚙️ Sprint Science
 
 ### About
 
 This directory contains the core computational engine for the `Performance-Diagnostic-Suite`.
 
-It is **not a runnable script** but a Python library intended to be imported by other applications (like the `Sprint Simulator GUI` or analysis scripts in the `dev/` folder).
+It is **not a runnable script** but a Python library intended to be imported by other applications. It consists of three interconnected modules that handle the biomechanics of sprinting:
 
-The primary component is the `SprintSimulation` class, which is built on a biomechanical model to simulate sprint kinematics from an athlete's Force-Velocity (F-V) profile.
-
----
-### How it Works
-
-The design is built around the central `SprintSimulation` class.
-
-1.  **Initialization:** The class is first initialized with an athlete's physical parameters (F0, V0, weight, height) and the desired simulation settings such running distance or external force.
-
-2.  **Core Simulation:** The main method, `run_sprint()`, executes an iterative physics simulation (using a `dt = 0.001s` time step) to model the entire sprint. This method calculates air resistance, propulsive forces, bend resistance and fatigue to generate a complete time-series of the sprint.
-
-3.  **Helper Methods:** All other methods (`top_speed()`, `segments()`, `flying_sections()`, etc.) are "helper" functions that use cached DataFrame from `run_sprint()` to quickly calculate specific, derived performance metrics without needing to re-run the entire simulation.
+1.  **`simulator.py` (Forward):** Predicts sprint performance from an athlete's F-V profile.
+2.  **`profilation.py` (Inverse):** Calculates the F-V profile from raw 1080 Sprint data.
+3.  **`physics.py`:** A shared physics engine handling air resistance, environmental conditions, and unit conversions.
+4.  **`utilities.py`:** Auxiliary functions and supplementary routines.
 
 ---
-### Key Methods
+### 1. Sprint Simulation (`simulator.py`)
 
-* **`run_sprint()`:** The main physics model. Returns a full `pandas` DataFrame of the sprint, including `time`, `distance`, `speed`, and `acceleration` for each time step.
-* **`get_results()`:** A safe helper that calls `run_sprint()` only if results haven't been cached yet, then returns the results.
-* **`top_speed()`:** Analyzes the results to find the absolute maximum velocity and the distance at which it was achieved.
-* **`segments()`:** Calculates cumulative and segment split times for every 10-meter block of the sprint.
-* **`flying_sections()`:** Finds the fastest "flying" segment of a given length (default `30m`) within the entire sprint.
-* **`f_v_profile_comparison()`:** A powerful analysis tool that simulates multiple sprints (assuming constant Pmax) to find the optimal F-V slope (Sfv) for the given distance.
+The `SprintSimulation` class models sprint kinematics based on an athlete's **Force-Velocity (F-V) profile**.
+
+#### How it Works
+The model executes an iterative physics simulation (`dt = 0.001s`) to generate a complete time-series of the sprint. It accounts for:
+* **Propulsive Forces:** Derived from maximal Force ($F_0$) and Velocity ($V_0$).
+* **Resistive Forces:** Air drag (calculated via `physics.py`) and bend resistance (centripetal force).
+* **Fatigue:** Modeling the decay of acceleration over distance.
+
+#### Key Methods
+* **`run_sprint()`:** Returns a full `pandas` DataFrame (time, distance, velocity, acceleration).
+* **`top_speed()`:** Identifies maximum velocity and the distance reached.
+* **`f_v_profile_comparison()`:** Simulates multiple scenarios to find the optimal F-V slope ($S_{fv}$) for a specific distance (e.g., 100m).
 
 ---
+### 2. Sprint Profiling (`profilation.py`)
 
+The `SprintProfilation` class solves the inverse problem: converting **raw time-speed data** into an athlete's physiological parameters ($F_0$, $V_0$, $P_{max}$).
+
+#### How it Works
+It uses **Least Squares Optimization** to fit modeled curves against observed field data.
+1.  **Input:** Continuous 1080 Sprint data.
+2.  **Optimization:** The algorithm adjusts $F_0$, $V_0$, and $\tau$ (tau) to minimize the error (RMSE) between the model and the real-world measurements.
+3.  **Output:** A high-precision F-V profile.
+
+#### Key Methods
+* **`calculate_profile()`:** The main trigger. Fits the model to the provided splits and returns the optimal athlete parameters.
+
+
+---
+### 3. Physics Engine (`physics.py`)
+
+A stateless utility module that centralizes all physical constants and environmental calculations to ensure consistency across the suite.
+
+#### Features
+* **Frontal area:** Calculates athlate's frontal area based on his height and weight.
+* **Air Density:** Calculates air density based on temperature and barometric pressure.
+* **Air Resistance:** Calculates drag based on barometric pressure, temperature, and athlete body frontal area.
+
+---
 ### Dependencies
 
 This core library requires:
 * `pandas`
 * `numpy`
+* `scipy` (for optimization algorithms in Profilation)
 
 ---
-
 ### Installation & Usage
 
-This is a library, not a standalone script. The intended way to use this class is to import it into another script (like the `Sprint Simulator GUI` or your own analysis scripts in the `dev/` folder).
+Import the classes directly into your scripts.
 
-#### Example (from a `dev/` script):
-
+#### Example 1: Simulation (Forward)
 ```python
-import pandas as pd
 from sprint_simulator_core.simulator import SprintSimulation
 
-# 1. Initialize the Simulation with athlete parameters
-sim = SprintSimulation(
-    F0=8.0, 
-    V0=10.0, 
-    weight=83.0, 
-    height=1.85,
-    running_distance=100
-)
+# Initialize with known profile
+sim = SprintSimulation(F0=8.0, V0=10.0, weight=83.0, height=1.85, distance=100)
 
-# 2. Get specific metrics using the helper methods
-top_speed_data = sim.top_speed()
-flying_30m = sim.flying_sections()
+# Run simulation
+results = sim.top_speed()
+print(f"Predicted Max Speed: {results['top_speed']:.2f} m/s")
+```
+#### Example 2: Profiling (Inverse)
+```python
+from sprint_simulator_core.profiler import SprintProfilation
 
-# 4. Print the results
-print("--- Basic Results ---")
-print(f"Full 100m time: {results_df['time'].iloc[-1]:.2f}s")
-print(f"Max Speed: {top_speed_data['top_speed']:.2f} m/s")
-print(f"Fastest Flying 30m: {flying_30m['first_fast']['time']:.2f}s")
+# The 'splits' argument must be a pandas DataFrame 
+# containing spatiotemporal data with columns 'time' (s) and 'speed' (m/s).
 
-# 5. Run advanced analysis
-print("\n--- Optimal F-V Profile Analysis ---")
-optimal_profile_df = sim.f_v_profile_comparison()
-fastest = optimal_profile_df.loc[optimal_profile_df['time'].idxmin()]
+# Example structure:
+splits = pd.DataFrame({
+    'time': [0.0, 0.01, 0.02, 0.03, ...], 
+    'speed': [0.0, 0.02, 0.05, 0.09, ...]
+})
 
-print(f"Optimal Sfv for 100m: {fastest['f_v_slope']:.2f}")
-print(f" (at F0: {fastest['F0']:.1f} and V0: {fastest['V0']:.1f})")
+# Calculate profile
+profiler = SprintProfilation(splits, weight=80.0, height=1.80)
+profile = profiler.calculate_profile()
+
+print(f"Calculated F0: {profile['F0']:.2f} N/kg")
+print(f"Calculated V0: {profile['V0']:.2f} m/s")
+```
