@@ -86,7 +86,8 @@ from sprint_simulator_core.profiler import SprintProfilation
 # Example structure:
 splits = pd.DataFrame({
     'time': [0.0, 0.01, 0.02, 0.03, ...], 
-    'speed': [0.0, 0.02, 0.05, 0.09, ...]
+    'speed': [0.0, 0.02, 0.05, 0.09, ...],
+    'force': [20.0, 20.5, 20.9, 21.0, ...]
 })
 
 # Calculate profile
