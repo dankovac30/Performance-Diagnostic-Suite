@@ -27,10 +27,6 @@ Here is an overview of the projects included in this suite. More detailed inform
 * **Status:** `Under development`
 * **About:** The future data-management center of the suite.
 
-#### 🧪 `dev/`
-* **Status:** `Internal`
-* **About:** Development and testing folder.
-
 ### Roadmap
 
 * `[ ]` Implement the `performance_hub` database and report generation.
