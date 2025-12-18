@@ -32,7 +32,7 @@ class SprintProfilation:
             weight (float): Athlete's body mass in kg.
             wind_speed (float, optional): Headwind (+) or tailwind (-) in m/s. Defaults to 0.0.
             temperature_c (float, optional): Air temperature in Celsius. Defaults to 20.0.
-            barometric_preassure_hpa (float, optional): Pressure in hPa. Defaults to 1013.25.
+            barometric_pressure_hpa (float, optional): Pressure in hPa. Defaults to 1013.25.
         """
 
         self.raw_spatiometric_data = raw_spatiometric_data.copy()
@@ -237,8 +237,9 @@ class SprintProfilation:
         # Calculate derived metrics via simulation
         Rf_max, DRF = self.calculate_Rfmax_DRF(F0, V0)
 
-        dictionary = {
+        results = {
             'F0': F0,
+            'F0_abs': F0_abs,
             'V0': V0,
             'Pmax': Pmax,
             'F_V_slope': F_V_slope,
@@ -246,7 +247,9 @@ class SprintProfilation:
             'DRF': DRF,
             'Model_Adherence': model_adherence,
             'Tau': tau,
-            't0': t0
+            't0': t0,
+            'source_data': spatiometric_data,
+            'regress_mask': mask_force_produced
         }
 
-        return dictionary
+        return results
