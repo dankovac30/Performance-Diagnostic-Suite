@@ -22,7 +22,7 @@ class SprintSimulation:
                  running_distance: float,
                  wind_speed: float = 0.0,
                  temperature_c: float = 20.0,
-                 barometric_preassure_hpa: float = 1013.25,
+                 barometric_pressure_hpa: float = 1013.25,
                  external_force_N: float = 0,
                  fly_length: float = 30,
                  sex: str = 'M',
@@ -40,7 +40,7 @@ class SprintSimulation:
             running_distance (float): Total distance to simulate (m).
             wind_speed (float, optional): Headwind (+) or tailwind (-) in m/s.
             temperature_c (float, optional): For air density calculation.
-            barometric_preassure_hpa (float, optional): For air density calculation.
+            barometric_pressure_hpa (float, optional): For air density calculation.
             external_force_N (float, optional): Constant external load (1080 resistance). Positive = Resistance.
             fly_length (float, optional): Distance for flying split calculation (e.g., 30m fly).
             sex (str, optional): 'M' or 'W' to determine default fatigue profiles.
@@ -55,7 +55,7 @@ class SprintSimulation:
         self.running_distance = running_distance
         self.wind_speed = wind_speed
         self.temperature_c = temperature_c
-        self.barometric_preassure_hpa = barometric_preassure_hpa
+        self.barometric_pressure_hpa = barometric_pressure_hpa
         self.external_force_N = external_force_N
         self.fly_length = fly_length
         self.fatigue_toggle = fatigue_toggle
@@ -65,7 +65,7 @@ class SprintSimulation:
 
         # Calculate aerodynamic properties
         self.A = calculate_frontal_area(self.height, self.weight)
-        self.rho = calculate_air_density(self.temperature_c, self.barometric_preassure_hpa)
+        self.rho = calculate_air_density(self.temperature_c, self.barometric_pressure_hpa)
 
         # Fatigue profile configuration based on 100-200m scoring tables conversions
         men_fatigue_settings = (5.16, 39.5)
@@ -104,6 +104,7 @@ class SprintSimulation:
         """
         if self.results_df is None:
             self.results_df = self.run_sprint()
+        
         return self.results_df
      
 
@@ -154,10 +155,10 @@ class SprintSimulation:
                 f_bend = 0
 
             # Aerodynamic drag
-            f_resistance = calculate_air_resistance_force(speed, self.rho, self.A, self.wind_speed)
+            f_air = calculate_air_resistance_force(speed, self.rho, self.A, self.wind_speed)
 
             # Net force calculation
-            f_resultant = f_propulsion - f_resistance - f_bend - self.external_force_N
+            f_resultant = f_propulsion - f_air - f_bend - self.external_force_N
             
             # Kinematics (Newton's 2nd Law)
             acceleration = f_resultant / self.weight
