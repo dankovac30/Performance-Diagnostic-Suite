@@ -1,4 +1,4 @@
-# ⚙️ Sprint Science
+# Sprint Science
 
 ### About
 
@@ -41,9 +41,35 @@ It uses **Least Squares Optimization** to fit modeled curves against observed fi
 #### Key Methods
 * **`calculate_profile()`:** The main trigger. Fits the model to the provided splits and returns the optimal athlete parameters.
 
+---
+### 3. Step Analysis (`step_analysis.py`)
+
+The `StepAnalyzer` class performs a gait analysis by decomposing high-frequency 1080 Sprint data into individual steps using zero-crossing detection algorithms.
+
+#### How it Works
+It distinguishes between **Kinematics** (step frequency, length, duration) calculated from propulsive peaks, and **Kinetics** (forces, impulses) calculated from ground contact phases.
+
+* **Step Detection:** Identifies "Foot-strike" (Negative force) events to segment the data into discrete cycles.
+* **Impulse Calculation:** Integrates force over time ($\int F \,dt$) to quantify **Propulsive Impulse** (positive force) vs. **Braking Impulse** (negative force/impact).
+* **Technical Efficiency:** Evaluates how much energy is lost to braking during specific phases (Acceleration vs. Max Velocity).
+
+#### Key Methods
+
+* **`analyze_steps()`:**
+Returns a detailed DataFrame containing metrics for every individual step, including:
+    * Left/Right leg identification.
+    * Step Length & Frequency.
+    * Net Impulse.
+    * Braking-to-Propulsive Ratio.
+
+* **`analyze_acc_technical_efficiency()`:**
+Quantifies the propulsive vs. braking balance specifically during the initial acceleration phase (typically steps 2–5).
+
+* **`analyze_maxv_technical_efficiency()`:**
+Analyzes technical efficiency and force maintenance in the top-speed phase (defined as $>90\%$ $V_{max}$).
 
 ---
-### 3. Physics Engine (`physics.py`)
+### 4. Physics Engine (`physics.py`)
 
 A stateless utility module that centralizes all physical constants and environmental calculations to ensure consistency across the suite.
 
@@ -84,7 +110,7 @@ from sprint_simulator_core.profiler import SprintProfilation
 # containing spatiotemporal data with columns 'time' (s) and 'speed' (m/s).
 
 # Example structure:
-splits = pd.DataFrame({
+spatiotemporal = pd.DataFrame({
     'time': [0.0, 0.01, 0.02, 0.03, ...], 
     'speed': [0.0, 0.02, 0.05, 0.09, ...],
     'force': [20.0, 20.5, 20.9, 21.0, ...]
@@ -96,4 +122,26 @@ profile = profiler.calculate_profile()
 
 print(f"Calculated F0: {profile['F0']:.2f} N/kg")
 print(f"Calculated V0: {profile['V0']:.2f} m/s")
+```
+
+#### Example 3: Step Analysis
+```python
+from sprint_science.step_analysis import StepAnalyzer
+
+# Initialize with raw data and starting leg
+analyzer = StepAnalyzer(
+    starting_leg='Left', 
+    raw_spatiometric_data=spatiotemporal, 
+    height=1.80, 
+    weight=80.0
+)
+
+# 1. Get full step-by-step report
+step_report = analyzer.analyze_steps()
+print(step_report[['step_number', 'leg', 'step_length', 'braking_propulsive_ratio']])
+
+# 2. Analyze Technical Efficiency in Acceleration
+prop_imp, brake_imp = analyzer.analyze_acc_technical_efficiency()
+print(f"Acceleration Propulsive Impulse: {prop_imp:.2f} Ns")
+print(f"Acceleration Braking Impulse: {brake_imp:.2f} Ns")
 ```

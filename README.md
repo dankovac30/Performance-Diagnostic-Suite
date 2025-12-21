@@ -10,20 +10,23 @@ The suite is built around a central physics engine (`sprint_simulator_core`) and
 
 Here is an overview of the projects included in this suite. More detailed information can be found in the `README.md` file within each project's folder.
 
+#### 🧱 Core
+* **Status:** `Active`
+* **About:** The foundational library of the suite. Contains shared low-level logic, signal processing algorithms (smoothing, filtering).
 
-#### ⚙️ Sprint Science
+#### Sprint Science
 * **Status:** `Released`
 * **About:** The computational core powering all sprint tools. Python library containing the **SprintProfilation** class for calculating Force-Velocity parameters (F0, V0) from raw timing data and **SprintSimulation** class for physics modeling.
 
-#### 🏁 Sprint Simulator GUI
+#### Sprint Simulator GUI
 * **Status:** `Released`
 * **About:** The main desktop application of the suite. Built with Tkinter, it enables coaches to perform "what-if" analyses of sprint performance based on an athlete’s Force–Velocity profile (F₀, V₀) and anthropometric parameters.
 
-#### 🔬 Testing Standards
+#### Testing Standards
 * **Status:** `Released`
 * **About:** A biomechanical tools that standardize diverse performance tests by using inverse kinematics to generate athlete-specific setups and positions based on anthropometry, ensuring consistent and reliable data.
 
-#### 🗃️ Performance Hub
+#### Performance Hub
 * **Status:** `Under development`
 * **About:** The future data-management center of the suite.
 
