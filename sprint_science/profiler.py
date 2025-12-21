@@ -4,8 +4,8 @@ import numpy as np
 import math
 import pandas as pd
 from scipy.stats import linregress
-from scipy.signal import butter, filtfilt
 from sprint_science.physics import calculate_frontal_area, calculate_air_density, calculate_air_resistance_force
+from core.signal_processing import apply_butterworth_filter, find_speed_plateau
 from sprint_science.simulator import SprintSimulation
 
 
@@ -61,7 +61,7 @@ class SprintProfilation:
         Returns:
             Tuple: (model_speed_array, model_acceleration_array, params_dict)
         """
-        #Initial guess & bounds [Vmax, Tau, t0] 
+        # Initial guess & bounds [Vmax, Tau, t0] 
         p0 = [np.max(v_data), 1.3, 0]
         bounds = ([0, 0.01, -3], [15, 5, 3])
 
@@ -78,48 +78,6 @@ class SprintProfilation:
         params = {'Tau': tau, 't0': t0, 'V_max': vmax}
 
         return model_speed, model_acc, params
-
-
-    def smooth_filter(self,
-                      raw_spatiometric_data: pd.DataFrame,
-                      data_to_smooth: str,
-                      cutoff_freq: float = 1.3,
-                      order: int = 4) -> np.ndarray:
-        """
-        Applies a low-pass Butterworth filter with custom padding to handle transient edges.
-        """
-        dt = np.mean(np.diff(raw_spatiometric_data['time']))
-        sample_rate = 1 / dt
-
-        # Padding length calculation
-        cutoff_period = 1.0 / cutoff_freq
-        pad_duration = 3.0 * cutoff_period
-        pad_samples = int(pad_duration * sample_rate)
-
-        first_value = raw_spatiometric_data[data_to_smooth].iloc[0]
-        padding_start = np.full(pad_samples, first_value)
-
-        raw_data = raw_spatiometric_data[data_to_smooth].values
-        padded_data = np.concatenate((padding_start, raw_data))
-
-        # Filter configuration
-        nyquist = 0.5 * sample_rate
-        normal_cutoff = cutoff_freq / nyquist
-
-        b, a = butter(order, normal_cutoff, btype='low', analog=False)
-        y_padded = filtfilt(b, a, padded_data)
-
-        # Remove padding
-        y = y_padded[pad_samples:]
-
-        return y
-
-
-    def find_speed_plateau(self, smooth_speed_array: np.ndarray) -> int:
-        """Identifies the index where the athlete reaches maximum velocity."""
-        idx_peak_speed = np.argmax(smooth_speed_array)
-
-        return idx_peak_speed
 
 
     def calculate_Rfmax_DRF(self, F0: float, V0: float) -> Tuple[float, float]:
@@ -168,11 +126,11 @@ class SprintProfilation:
         raw_spatiometric_data = raw_spatiometric_data.drop(columns=['position', 'acceleration'])
 
         # Smoothing: Smooth external force and speed
-        raw_spatiometric_data['force'] = self.smooth_filter(raw_spatiometric_data, 'force')
-        smooth_speed_array = self.smooth_filter(raw_spatiometric_data, 'speed')
+        raw_spatiometric_data['force'] = apply_butterworth_filter(raw_spatiometric_data, 'force', cutoff_freq=1.3, order=4)
+        smooth_speed_array = apply_butterworth_filter(raw_spatiometric_data, 'speed')
         
         # Cutoff post peak speed on filtered array
-        idx_peak_speed = self.find_speed_plateau(smooth_speed_array)
+        idx_peak_speed = find_speed_plateau(smooth_speed_array)
         raw_spatiometric_data['Smooth 1080 Speed (m/s)'] = smooth_speed_array
              
         spatiometric_data = raw_spatiometric_data.iloc[:idx_peak_speed+1].copy()
