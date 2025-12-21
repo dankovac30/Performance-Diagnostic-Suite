@@ -10,13 +10,13 @@ The suite is built around a central physics engine (`sprint_simulator_core`) and
 
 Here is an overview of the projects included in this suite. More detailed information can be found in the `README.md` file within each project's folder.
 
-#### 🧱 Core
+#### Core
 * **Status:** `Active`
 * **About:** The foundational library of the suite. Contains shared low-level logic, signal processing algorithms (smoothing, filtering).
 
 #### Sprint Science
 * **Status:** `Released`
-* **About:** The computational core powering all sprint tools. Python library containing the **SprintProfilation** class for calculating Force-Velocity parameters (F0, V0) from raw timing data and **SprintSimulation** class for physics modeling.
+* **About:** The computational core powering all sprint tools. Python library containing the **SprintProfilation** class for calculating Force-Velocity parameters (F0, V0) from raw timing data, **SprintSimulation** class for physics modeling and **StepAnalyzer** for gait analysis.
 
 #### Sprint Simulator GUI
 * **Status:** `Released`
