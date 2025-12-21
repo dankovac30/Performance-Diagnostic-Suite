@@ -8,8 +8,9 @@ It is **not a runnable script** but a Python library intended to be imported by 
 
 1.  **`simulator.py` (Forward):** Predicts sprint performance from an athlete's F-V profile.
 2.  **`profilation.py` (Inverse):** Calculates the F-V profile from raw 1080 Sprint data.
-3.  **`physics.py`:** A shared physics engine handling air resistance, environmental conditions, and unit conversions.
-4.  **`utilities.py`:** Auxiliary functions and supplementary routines.
+3.  **`step_analysis.py`:** Performs a gait analysis from raw 1080 Sprint data.
+4.  **`physics.py`:** A shared physics engine handling air resistance, environmental conditions, and unit conversions.
+5.  **`utilities.py`:** Auxiliary functions and supplementary routines.
 
 ---
 ### 1. Sprint Simulation (`simulator.py`)
