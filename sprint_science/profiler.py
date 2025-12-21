@@ -17,7 +17,7 @@ class SprintProfilation:
     """
 
     def __init__(self,
-                 raw_spatiometric_data: pd.DataFrame,
+                 raw_spatiotemporal_data: pd.DataFrame,
                  height: float,
                  weight: float,
                  wind_speed: float = 0.0,
@@ -27,7 +27,7 @@ class SprintProfilation:
         Initialize the profiler with athlete data and environmental conditions.
 
         Args:
-            raw_spatiometric_data (pd.DataFrame): Raw data from 1080 Motion (time, speed, force).
+            raw_spatiotemporal_data (pd.DataFrame): Raw data from 1080 Motion (time, speed, force).
             height (float): Athlete's height in centimeters or meters.
             weight (float): Athlete's body mass in kg.
             wind_speed (float, optional): Headwind (+) or tailwind (-) in m/s. Defaults to 0.0.
@@ -35,7 +35,7 @@ class SprintProfilation:
             barometric_pressure_hpa (float, optional): Pressure in hPa. Defaults to 1013.25.
         """
 
-        self.raw_spatiometric_data = raw_spatiometric_data.copy()
+        self.raw_spatiotemporal_data = raw_spatiotemporal_data.copy()
         self.height = height
         self.weight = weight
         self.wind_speed = wind_speed
@@ -122,18 +122,18 @@ class SprintProfilation:
         Returns:
             Dict containing F0, V0, Pmax, F-V Slope, RFmax, DRF, etc.
         """
-        raw_spatiometric_data = self.raw_spatiometric_data.copy()
-        raw_spatiometric_data = raw_spatiometric_data.drop(columns=['position', 'acceleration'])
+        raw_spatiotemporal_data = self.raw_spatiotemporal_data.copy()
+        raw_spatiotemporal_data = raw_spatiotemporal_data.drop(columns=['position', 'acceleration'])
 
         # Smoothing: Smooth external force and speed
-        raw_spatiometric_data['force'] = apply_butterworth_filter(raw_spatiometric_data, 'force', cutoff_freq=1.3, order=4)
-        smooth_speed_array = apply_butterworth_filter(raw_spatiometric_data, 'speed')
+        raw_spatiotemporal_data['force'] = apply_butterworth_filter(raw_spatiotemporal_data, 'force', cutoff_freq=1.3, order=4)
+        smooth_speed_array = apply_butterworth_filter(raw_spatiotemporal_data, 'speed')
         
         # Cutoff post peak speed on filtered array
         idx_peak_speed = find_speed_plateau(smooth_speed_array)
-        raw_spatiometric_data['Smooth 1080 Speed (m/s)'] = smooth_speed_array
+        raw_spatiotemporal_data['Smooth 1080 Speed (m/s)'] = smooth_speed_array
              
-        spatiometric_data = raw_spatiometric_data.iloc[:idx_peak_speed+1].copy()
+        spatiotemporal_data = raw_spatiotemporal_data.iloc[:idx_peak_speed+1].copy()
 
         # Rename to match Morin's Excel sheet
         rename = {
@@ -141,40 +141,40 @@ class SprintProfilation:
             'speed': '1080 Speed (m/s)',
             'force': 'F external load (N)'
         }
-        spatiometric_data = spatiometric_data.rename(columns=rename)
+        spatiotemporal_data = spatiotemporal_data.rename(columns=rename)
         
-        v_data = spatiometric_data['1080 Speed (m/s)'].to_numpy()
-        t_data = spatiometric_data['Time (s)'].to_numpy()
+        v_data = spatiotemporal_data['1080 Speed (m/s)'].to_numpy()
+        t_data = spatiotemporal_data['Time (s)'].to_numpy()
 
         # Model fitting
         model_speed, model_acc, params = self.fit_morin(v_data, t_data)
 
         # Physics calculations
-        spatiometric_data['Model speed (m/s)'] = model_speed
-        spatiometric_data['Acceleration (m/s2)'] = model_acc
-        dt = spatiometric_data['Time (s)'].diff().fillna(0)
-        delta_distance = spatiometric_data['Model speed (m/s)'] * dt
-        spatiometric_data['Position (m)'] = delta_distance.cumsum()
-        spatiometric_data['Square differences'] = (spatiometric_data['Smooth 1080 Speed (m/s)'] - spatiometric_data['Model speed (m/s)']) ** 2
-        spatiometric_data['F Hzt (N)'] = spatiometric_data['Acceleration (m/s2)'] * self.weight
-        spatiometric_data['F air (N)'] = calculate_air_resistance_force(spatiometric_data['Model speed (m/s)'], self.air_density, self.frontal_area, self.wind_speed)
-        spatiometric_data['F Hzt total (N)'] =  spatiometric_data['F Hzt (N)'] + spatiometric_data['F air (N)'] + spatiometric_data['F external load (N)']
-        spatiometric_data['F Hzt total (N/kg)'] = spatiometric_data['F Hzt total (N)'] / self.weight
-        spatiometric_data['Power Hzt (W/kg)'] = spatiometric_data['Model speed (m/s)'] * spatiometric_data['F Hzt total (N/kg)']
-        spatiometric_data['F Resultant (N)'] = np.sqrt(spatiometric_data['F Hzt total (N)']**2 + (self.weight * 9.80665)**2)      
-        spatiometric_data['RF (%)'] = (spatiometric_data['F Hzt total (N)'] / spatiometric_data['F Resultant (N)']) * 100
+        spatiotemporal_data['Model speed (m/s)'] = model_speed
+        spatiotemporal_data['Acceleration (m/s2)'] = model_acc
+        dt = spatiotemporal_data['Time (s)'].diff().fillna(0)
+        delta_distance = spatiotemporal_data['Model speed (m/s)'] * dt
+        spatiotemporal_data['Position (m)'] = delta_distance.cumsum()
+        spatiotemporal_data['Square differences'] = (spatiotemporal_data['Smooth 1080 Speed (m/s)'] - spatiotemporal_data['Model speed (m/s)']) ** 2
+        spatiotemporal_data['F Hzt (N)'] = spatiotemporal_data['Acceleration (m/s2)'] * self.weight
+        spatiotemporal_data['F air (N)'] = calculate_air_resistance_force(spatiotemporal_data['Model speed (m/s)'], self.air_density, self.frontal_area, self.wind_speed)
+        spatiotemporal_data['F Hzt total (N)'] =  spatiotemporal_data['F Hzt (N)'] + spatiotemporal_data['F air (N)'] + spatiotemporal_data['F external load (N)']
+        spatiotemporal_data['F Hzt total (N/kg)'] = spatiotemporal_data['F Hzt total (N)'] / self.weight
+        spatiotemporal_data['Power Hzt (W/kg)'] = spatiotemporal_data['Model speed (m/s)'] * spatiotemporal_data['F Hzt total (N/kg)']
+        spatiotemporal_data['F Resultant (N)'] = np.sqrt(spatiotemporal_data['F Hzt total (N)']**2 + (self.weight * 9.80665)**2)      
+        spatiotemporal_data['RF (%)'] = (spatiotemporal_data['F Hzt total (N)'] / spatiotemporal_data['F Resultant (N)']) * 100
 
         # Mask: Only include lines where athlete is producing force
-        mask_force_produced_raw = spatiometric_data['F Hzt total (N)'] > spatiometric_data['F external load (N)']
+        mask_force_produced_raw = spatiotemporal_data['F Hzt total (N)'] > spatiotemporal_data['F external load (N)']
         mask_force_produced = mask_force_produced_raw.cumsum().astype(bool)
         
-        res_f_v = linregress(x=spatiometric_data.loc[mask_force_produced, 'Model speed (m/s)'],
-                            y=spatiometric_data.loc[mask_force_produced, 'F Hzt total (N)'])
+        res_f_v = linregress(x=spatiotemporal_data.loc[mask_force_produced, 'Model speed (m/s)'],
+                            y=spatiotemporal_data.loc[mask_force_produced, 'F Hzt total (N)'])
         
         # Model Adherence: Compares filtered real speed with model
-        ss_res = spatiometric_data['Square differences'].sum()
-        mean_speed = spatiometric_data['Smooth 1080 Speed (m/s)'].mean()
-        ss_tot = ((spatiometric_data['Smooth 1080 Speed (m/s)'] - mean_speed) ** 2).sum()
+        ss_res = spatiotemporal_data['Square differences'].sum()
+        mean_speed = spatiotemporal_data['Smooth 1080 Speed (m/s)'].mean()
+        ss_tot = ((spatiotemporal_data['Smooth 1080 Speed (m/s)'] - mean_speed) ** 2).sum()
 
         if ss_tot > 0:
             model_adherence = 1 - (ss_res / ss_tot)
@@ -206,7 +206,7 @@ class SprintProfilation:
             'Model_Adherence': model_adherence,
             'Tau': tau,
             't0': t0,
-            'source_data': spatiometric_data,
+            'source_data': spatiotemporal_data,
             'regress_mask': mask_force_produced
         }
 
