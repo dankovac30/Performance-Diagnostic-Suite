@@ -38,7 +38,7 @@ class SprintSimulation:
             weight (float): Athlete's body mass (kg).
             height (float): Athlete's height (cm or m).
             running_distance (float): Total distance to simulate (m).
-            wind_speed (float, optional): Headwind (+) or tailwind (-) in m/s.
+            wind_speed (float, optional): Headwind (-) or tailwind (+) in m/s.
             temperature_c (float, optional): For air density calculation.
             barometric_pressure_hpa (float, optional): For air density calculation.
             external_force_N (float, optional): Constant external load (1080 resistance). Positive = Resistance.
