@@ -14,6 +14,10 @@ Here is an overview of the projects included in this suite. More detailed inform
 * **Status:** `Active`
 * **About:** The foundational library of the suite. Contains shared low-level logic, signal processing algorithms (smoothing, filtering).
 
+#### Vendors
+* **Status:** `Active`
+* **About:** The hardware integration layer. Contains device-specific logic for parsing, cleaning, and normalizing data from various diagnostic tools.
+
 #### Sprint Science
 * **Status:** `Released`
 * **About:** The computational core powering all sprint tools. Python library containing the **SprintProfilation** class for calculating Force-Velocity parameters (F0, V0) from raw timing data, **SprintSimulation** class for physics modeling and **StepAnalyzer** for gait analysis.
