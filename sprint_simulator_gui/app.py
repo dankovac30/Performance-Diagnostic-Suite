@@ -79,7 +79,7 @@ class SprintSimulatorApp:
         main_frame.rowconfigure(2, weight=1)
 
 
-    def _create_input_widgets(self, parent_frame: ttk.Frame):
+    def _create_input_widgets(self, parent_frame: ttk.Frame) -> None:
         """Creates the input form for athlete parameters (F0, V0, Height, Weight)."""
         input_frame = ttk.LabelFrame(parent_frame, text='Input parameters', padding=10)
         input_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
@@ -109,7 +109,7 @@ class SprintSimulatorApp:
         self.entry_weight.insert(0, "83.0")
 
 
-    def _create_output_widgets(self, parent_frame: ttk.Frame):
+    def _create_output_widgets(self, parent_frame: ttk.Frame) -> None:
         """Creates the dashboard for displaying simulation results (splits, max speed, etc.)."""
         output_frame = ttk.LabelFrame(parent_frame, text="Simulation results", padding="10")
         output_frame.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
@@ -138,7 +138,7 @@ class SprintSimulatorApp:
             row += 1
 
 
-    def _create_control_widgets(self, parent_frame: ttk.Frame):
+    def _create_control_widgets(self, parent_frame: ttk.Frame) -> None:
         """Creates action buttons (Calculate, Clear) and graph view controls."""
         # Action buttons
         action_frame = ttk.LabelFrame(parent_frame, text="Actions", padding="10")
@@ -163,7 +163,7 @@ class SprintSimulatorApp:
         rb_time.grid(row=1, column=0, sticky="w", padx=5)
 
 
-    def _create_graph_widget(self, parent_frame: ttk.Frame):
+    def _create_graph_widget(self, parent_frame: ttk.Frame) -> None:
         """Embeds a Matplotlib figure into the Tkinter window using FigureCanvasTkAgg."""
         graph_frame = ttk.LabelFrame(parent_frame, text="Graph Analysis", padding="5")
         graph_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
@@ -184,7 +184,7 @@ class SprintSimulatorApp:
         self._draw_graph()
 
 
-    def _handle_calculate(self):
+    def _handle_calculate(self) -> None:
         """
         Triggered when 'Calculate' is clicked.
         1. Retrieves data from inputs.
@@ -228,7 +228,7 @@ class SprintSimulatorApp:
             messagebox.showerror("Simulation Error", str(e))
 
     
-    def _draw_graph(self):
+    def _draw_graph(self) -> None:
         """Redraws the graph based on the stored simulation reports and selected view mode."""
         self.ax.clear()
         self.ax.set_facecolor(self.graph_bg_color)
@@ -269,13 +269,13 @@ class SprintSimulatorApp:
         self.canvas.draw()
 
 
-    def _handle_clear_graph(self):
+    def _handle_clear_graph(self) -> None:
         """Clears all previous simulation runs and resets the plot."""
         self.simulation_reports.clear()
         self._draw_graph()
 
 
-def main():
+def main() -> None:
     """Entry point for the application."""
     try:
         root = tk.Tk()
