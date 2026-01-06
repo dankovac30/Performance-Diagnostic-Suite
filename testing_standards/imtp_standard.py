@@ -18,7 +18,7 @@ class IMTP_Calculations:
         self.ankle_offset = (athlete.foot_length/2) - athlete.heel_ankle_length
         
     
-    def update_geometry(self, knee_angle_rad: float, l1: float):
+    def update_geometry(self, knee_angle_rad: float, l1: float) -> None:
         """
         Recalculates the entire body geometry based on a specific knee angle 
         and bar position on the thigh (L1).
@@ -327,4 +327,3 @@ class IMTP_Calculations:
         best_rack_height = sorted_results[0]
 
         return best_rack_height
-        
