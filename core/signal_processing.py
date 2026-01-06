@@ -75,3 +75,57 @@ def find_speed_plateau(smooth_speed_array: np.ndarray) -> int:
     idx_peak_speed = np.argmax(smooth_speed_array)
 
     return idx_peak_speed
+
+
+def apply_corridor_filter(data_series: pd.Series,
+                          window_size: int=15,
+                          threshold: float=1.0) -> pd.Series:
+    """
+    Applies a 'corridor' filter to remove gross outliers and interference.
+
+    Args:
+        data_series (pd.Series): The input raw velocity data time-series.
+        window_size (int, optional): The number of samples for the rolling median window. 
+        threshold (float, optional): The maximum allowed deviation from the guide curve in the data's unit.
+
+    Returns:
+        pd.Series: The cleaned data series with outliers interpolated.
+    """
+    # Create the guide curve
+    guide_curve = data_series.rolling(window=window_size, center=True, min_periods=1).median()
+
+    # Define the Corridor
+    upper_bound = guide_curve + threshold
+    lower_bound = guide_curve - threshold
+
+    # Create validity mask
+    valid_mask = (data_series >= lower_bound) & (data_series <= upper_bound)
+
+    # Outlier removal and gap filling
+    clean_series = data_series.copy()
+    clean_series[~valid_mask] = np.nan
+    clean_series = clean_series.interpolate(method='linear', limit_direction='both')
+    
+    return clean_series
+
+
+def apply_median_filter(data_series: Union[pd.Series, np.ndarray],
+                        kernel_size: int = 5) -> np.ndarray:
+    """
+    Applies a standard median filter to despike the signal.
+
+    Args:
+        data_series (Union[pd.Series, np.ndarray]): The input velocity data.
+        kernel_size (int, optional): The size of the sliding window.
+
+    Returns:
+        np.ndarray: The despiked data array.
+    """
+    # Kernel size validation
+    if kernel_size % 2 == 0:
+        kernel_size += 1
+    
+    # Apply filter
+    median_series = medfilt(data_series, kernel_size)
+
+    return median_series
