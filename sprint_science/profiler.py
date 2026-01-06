@@ -126,13 +126,14 @@ class SprintProfilation:
         raw_spatiotemporal_data = raw_spatiotemporal_data.drop(columns=['position', 'acceleration'])
 
         # Smoothing: Smooth external force and speed
-        raw_spatiotemporal_data['force'] = apply_butterworth_filter(raw_spatiotemporal_data, 'force', cutoff_freq=1.3, order=4)
-        smooth_speed_array = apply_butterworth_filter(raw_spatiotemporal_data, 'speed')
+        raw_spatiotemporal_data['force'] = apply_butterworth_filter(raw_spatiotemporal_data, 'force', padding='symmetric', cutoff_freq=1.3, order=4)
+        smooth_speed_array = apply_butterworth_filter(raw_spatiotemporal_data, 'speed', padding='symmetric')
         
         # Cutoff post peak speed on filtered array
         idx_peak_speed = find_speed_plateau(smooth_speed_array)
         raw_spatiotemporal_data['Smooth 1080 Speed (m/s)'] = smooth_speed_array
-             
+        
+        # Acceleration phase only
         spatiotemporal_data = raw_spatiotemporal_data.iloc[:idx_peak_speed+1].copy()
 
         # Rename to match Morin's Excel sheet
