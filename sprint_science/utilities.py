@@ -1,12 +1,24 @@
 from sprint_science.simulator import SprintSimulation
+from typing import Tuple
 
+def find_profile_for_time(target_time: float,
+                          sfv: float,
+                          height: float,
+                          weight: float,
+                          running_distance: float = 100.0) -> Tuple[float, float]:
+    """
+    Reverse-engineers the mechanical capabilities (F0, V0) required to achieve a specific 
+    sprint time over a given distance based on F0/V0 ratio.
 
-def find_profile_for_time(target_time, sfv, height, weight, running_distance=100):
-
+    Returns:
+        Tuple[float, float]: The calculated (F0, V0) pair that results in the target_time.
+    """
+    # Search bounds for V0
     min_V0 = 1.0
     max_V0 = 20
     tolerance = 0.001
 
+    # Binary search loop
     for _ in range(20):
 
         V0 = (min_V0 + max_V0) / 2
