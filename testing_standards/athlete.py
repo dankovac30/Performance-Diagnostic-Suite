@@ -3,15 +3,18 @@ class Athlete:
     Data structure holding anthropometric measurements of an athlete.
     Acts as a configuration object for the bio-mechanical models.
     """
-    def __init__(self,
-                 foot_length: float,
-                 heel_ankle_length: float,
-                 ankle_height: float,
-                 shin_length: float,
-                 thigh_length: float,
-                 trunk_length: float,
-                 arm_length: float,
-                 quadriceps_offset: float = 7):
+
+    def __init__(
+        self,
+        foot_length: float,
+        heel_ankle_length: float,
+        ankle_height: float,
+        shin_length: float,
+        thigh_length: float,
+        trunk_length: float,
+        arm_length: float,
+        quadriceps_offset: float = 7,
+    ):
         """
         Initialize athlete parameters. All measurements are in centimeters (cm).
 
@@ -33,4 +36,3 @@ class Athlete:
         self.trunk_length = trunk_length
         self.arm_length = arm_length
         self.quadriceps_offset = quadriceps_offset
-        
