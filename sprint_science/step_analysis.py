@@ -213,8 +213,6 @@ class StepAnalyzer:
                 "v_start": v_start,
                 "v_end": v_end,
                 "delta_v": delta_v,
-                "step_number": current_step,
-                "leg": current_leg,
                 "time_start": time_start,
                 "time_end": time_end,
                 "step_time": step_time,
