@@ -136,6 +136,7 @@ def fetch_training_data(api_key: str, params: dict[str, Any] | None = None) -> l
             for motion_group in training_set["motionGroups"]:
                 run_id = motion_group["id"]
                 side = motion_group["side"]
+                comment = motion_group.get("comment", "")
 
                 for run in motion_group["motions"]:
                     # Extract run metrics
@@ -164,6 +165,7 @@ def fetch_training_data(api_key: str, params: dict[str, Any] | None = None) -> l
                         "run_id": run_id,
                         "run_created": created,
                         "side": side,
+                        "comment": comment,
                         "total_distance": distance,
                         "total_time": time,
                         "top_speed": top_speed,
