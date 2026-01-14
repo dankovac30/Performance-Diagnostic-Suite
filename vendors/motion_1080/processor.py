@@ -233,6 +233,51 @@ class SprintProcessor:
 
         return pd.DataFrame(lv_results)
 
+    def flag_publication_quality_sessions(self):
+        """
+        Identifies and flags sessions meeting full methodological standards for publication
+
+        Updates:
+            self.complete_df: Adds a boolean column 'publication_valid' (True/False).
+        """
+        # Create a working copy to perform intermediate aggregations without affecting the main DF
+        working_df = self.complete_df.copy()
+
+        # Identify valid ("v") and explicitly invalid ("i") runs
+        flagged_runs = working_df[working_df["comment"] == "v"]
+        flagged_dates = flagged_runs["run_created"].dt.date.unique()
+        invalid_sessions = set(working_df[working_df["comment"] == "i"]["set_id"])
+
+        working_df["date_created"] = working_df["run_created"].dt.date
+
+        testing_sessions = []
+
+        # Iterate through dates where at least one valid flag was found
+        for date in flagged_dates:
+            day_data = working_df[working_df["date_created"] == date]
+
+            # Create a "fingerprint" for each session on that day:
+            sesh_distance_dict = day_data.groupby("set_id")["total_distance"].apply(set).to_dict()
+
+            # Get IDs of the manually verified sessions
+            flagged_ids = day_data[day_data["comment"] == "v"]["set_id"].unique()
+
+            # Extract the protocols used in the verified sessions
+            testing_distances = [sesh_distance_dict[f_id] for f_id in flagged_ids]
+
+            # Include any other session, that used the same protocol that day
+            for session_id, running_distances in sesh_distance_dict.items():
+                if running_distances in testing_distances:
+                    testing_sessions.append(session_id)
+
+        # Remove sessions explicitly marked as invalid
+        valid_testing_sessions = set(testing_sessions) - invalid_sessions
+
+        # Apply the final mask to the main dataframe
+        final_mask = self.complete_df["set_id"].isin(valid_testing_sessions)
+        self.complete_df["publication_valid"] = False
+        self.complete_df.loc[final_mask, "publication_valid"] = True
+
     def download_1080_data(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Primary entry point for downloading and processing 1080 data.
@@ -342,6 +387,9 @@ class SprintProcessor:
         # Clear measurement data for non-testing runs
         measurement_cols = ["weight", "height"]
         self.complete_df.loc[training_mask, measurement_cols] = pd.NA
+
+        # Flag sessions with full methodological integrity
+        self.flag_publication_quality_sessions()
 
         # Calculate Load-Velocity profiles
         load_velocity_df = self.calculate_load_velocity()
