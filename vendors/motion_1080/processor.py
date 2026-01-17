@@ -5,7 +5,7 @@ import pandas as pd
 
 from config import Config
 from core.signal_processing import apply_butterworth_filter, find_speed_plateau
-from sprint_science.profiler import SprintProfilation
+from sprint_science.profiler import SprintSpeedTimeProfiler
 from sprint_science.step_analysis import StepAnalyzer
 from vendors.motion_1080.decoder import decode_1080_samples
 from vendors.motion_1080.sync import fetch_profiles, fetch_training_data
@@ -84,7 +84,7 @@ class SprintProcessor:
         weight = row["weight"]
 
         # Object instantiation and profile calculation
-        profiler = SprintProfilation(raw_spatiotemporal_data=spatiotemporal_data, height=height, weight=weight)
+        profiler = SprintSpeedTimeProfiler(raw_spatiotemporal_data=spatiotemporal_data, height=height, weight=weight)
         profile_dict = profiler.calculate_profile()
 
         keys_to_export = ["F0", "F0_abs", "V0", "Pmax", "F_V_slope", "Rf_max", "DRF", "Model_Adherence", "Tau", "t0"]

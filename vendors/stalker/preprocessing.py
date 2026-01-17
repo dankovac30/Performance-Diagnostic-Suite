@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from core.signal_processing import apply_butterworth_filter, find_speed_plateau
-from sprint_science.profiler import SprintProfilation
+from sprint_science.profiler import SprintSpeedTimeProfiler
 
 
 def crop_start(spatiotemporal_data: pd.DataFrame, time_shift: float = 2.0) -> pd.DataFrame:
@@ -71,7 +71,7 @@ def reconstruct_start(spatiotemporal_data):
     acceleratin_data = spatiotemporal_data.iloc[:speed_plateau_idx].copy()
 
     # Initialize Profiler (using dummy weight/height as fit_morin only needs kinematics)
-    profiler = SprintProfilation(acceleratin_data, height=85, weight=190)
+    profiler = SprintSpeedTimeProfiler(acceleratin_data, height=85, weight=190)
 
     # Fit Morin's model to extract macroscopic kinematic parameters
     _, _, params = profiler.fit_morin(acceleratin_data["median_speed"], acceleratin_data["time"])
