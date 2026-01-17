@@ -1,4 +1,4 @@
-# 🏁 Sprint Simulator GUI
+# Sprint Simulator GUI
 
 ### About
 
@@ -15,7 +15,7 @@ It allows you to run instant "what-if" scenarios to see how changes in an athlet
 
 ---
 
-### 🚀 Quick Start (Download)
+### Quick Start (Download)
 
 For most users, the easiest way to use the app is to download the pre-compiled version.
 
@@ -25,7 +25,7 @@ For most users, the easiest way to use the app is to download the pre-compiled v
 
 ---
 
-### ✨ Features
+### Features
 
 * **F-V Profile Inputs:** Analyze sprint performance based on `F0` (N/kg), `V0` (m/s), `Weight` (kg), and `Height` (m).
 * **Key Performance Metrics:** Instantly see the results for:
@@ -43,7 +43,7 @@ For most users, the easiest way to use the app is to download the pre-compiled v
 
 ---
 
-### 💻 Installation & Usage (from Source)
+### Installation & Usage (from Source)
 
 If you are a developer and want to run the app from the source code.
 
@@ -64,7 +64,7 @@ If you are a developer and want to run the app from the source code.
     python -m sprint_simulator_gui.app
     ```
 ---
-### 🛠️ Tech Stack
+### Tech Stack
 
 * **Python 3**
 * **Tkinter** (via `ttk`) for the GUI framework.
