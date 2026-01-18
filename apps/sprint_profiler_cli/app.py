@@ -260,10 +260,11 @@ class SprintProfilerApp:
                     "Name": name,
                     "F0 (N/kg)": report["F0"],
                     "V0 (m/s)": report["V0"],
-                    "Rf_max (%)": report["Rf_max"],
+                    "P max (W/kg)": report["Pmax"],
+                    "Rf max (%)": report["Rf_max"],
                     "DRF": report["DRF"],
                     "F-V slope": -report["F_V_slope"],
-                    "R2 (Adherence)": report["Model_Adherence"],
+                    "Sum Square diff": report["Sum Square diff"],
                     "Tau": report["Tau"],
                     "V_max": report["V_max"],
                 }
