@@ -19,7 +19,7 @@ The application follows a "Template-First" philosophy to ensure data consistency
 
 ---
 
-## Quick Start (Binary)
+## Quick Start
 
 For end-users using the compiled version:
 
@@ -71,18 +71,18 @@ For developers running the raw Python script.
 
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/dankovac30/Performance-Diagnostic-Suite.git](https://github.com/dankovac30/Performance-Diagnostic-Suite.git)
+    git clone
     ```
 
 2.  **Install Dependencies:**
     ```bash
-    pip install -r sprint_simulator_gui/requirements.txt
+    pip install sprint_simulator_gui/requirements.txt
     ```
 
 3.  **Run the Application:**
     Navigate to the project root and run:
     ```bash
-    python -m sprint_science.profiler_app
+    python -m apps.sprint_profiler_cli.app
     ```
 
 ---
@@ -92,4 +92,3 @@ For developers running the raw Python script.
 * **Python 3**
 * **Pandas & OpenPyXL** for Excel I/O and data manipulation.
 * **SciPy (Optimize & Stats)** for non-linear curve fitting ($d(t)$ model) and linear regression.
-* **Colorama/ANSI** for the colored terminal interface.

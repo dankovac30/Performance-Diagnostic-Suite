@@ -61,7 +61,7 @@ If you are a developer and want to run the app from the source code.
 3.  **Run the Application:**
     The app **must** be run as a module from the **root** folder of the repository.
     ```bash
-    python -m sprint_simulator_gui.app
+    python -m apps.sprint_simulator_gui.app
     ```
 ---
 ### Tech Stack
