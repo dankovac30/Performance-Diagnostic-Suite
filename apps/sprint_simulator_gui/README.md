@@ -1,8 +1,6 @@
 # Sprint Simulator GUI
 
-### About
-
-This is the flagship desktop application of the **Performance-Diagnostic-Suite**. It's a lightweight tool, built with Python and Tkinter, designed for coaches, athletes, and sport scientists.
+Desktop application of the **Performance-Diagnostic-Suite**. It's a lightweight tool, built with Python and Tkinter, designed for coaches, athletes, and sport scientists.
 
 It allows you to run instant "what-if" scenarios to see how changes in an athlete's Force-Velocity profile (F0, V0) and body parameters (Weight, Height) will affect their sprint performance over 100 meters.
 
@@ -20,7 +18,7 @@ It allows you to run instant "what-if" scenarios to see how changes in an athlet
 For most users, the easiest way to use the app is to download the pre-compiled version.
 
 1.  Go to the [**Releases Page**](https://github.com/dankovac30/Performance-Diagnostic-Suite/releases).
-2.  Download the latest `Sprint-F-V-Simulator.exe` file.
+2.  Download the latest `Sprint Simulator.exe` file.
 3.  Run the `.exe` file.
 
 ---

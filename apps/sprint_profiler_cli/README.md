@@ -1,6 +1,5 @@
 # F-V Sprint Profiler CLI
 
-## About
 
 This tool is the data-crunching engine of the **Performance-Diagnostic-Suite**. It is a robust Command Line Interface (CLI) application designed to automate the analysis of sprint split times.
 
@@ -8,7 +7,7 @@ Based on **J.B. Morin's macroscopic model**, it transforms raw timing gate data 
 
 ---
 
-## Workflow
+### Workflow
 
 The application follows a "Template-First" philosophy to ensure data consistency.
 
@@ -19,11 +18,11 @@ The application follows a "Template-First" philosophy to ensure data consistency
 
 ---
 
-## Quick Start
+### Quick Start
 
 For end-users using the compiled version:
 
-1.  Download the `Sprint-Profiler.exe`.
+1.  Download the `Sprint Profiler.exe`.
 2.  Place it in a dedicated folder (e.g., `My_Sprint_Analysis`).
 3.  **Run the .exe**.
     * *First run:* It will create `kinematics_sprint_data.xlsx` and close.
@@ -32,8 +31,7 @@ For end-users using the compiled version:
     * It will generate `kinetics_results.xlsx` with all calculated metrics.
 
 ---
-
-## Features
+### Features
 
 * **Smart Template System:** Automatically builds the required Excel structure if missing.
 * **Dynamic Split Detection:** The app isn't hardcoded to specific distances. You can use any splits (e.g., 5m, 10m, 20m, 30m) just by naming the Excel columns accordingly.
@@ -42,8 +40,7 @@ For end-users using the compiled version:
 * **Scientific Validation:** Enforces a **minimum of 4 split segments** to ensure a valid regression fit, adhering to J.B. Morin's recommendations for data reliability.
 
 ---
-
-## Data Structure
+### Data Structure
 
 The input Excel file (`kinematics_sprint_data.xlsx`) requires specific columns.
 
@@ -55,7 +52,7 @@ The input Excel file (`kinematics_sprint_data.xlsx`) requires specific columns.
 | **Height (cm)** | Body height (for air resistance). |
 | **Reaction Time (s)** | Time to subtract (e.g., 0.00 for touch-pad, 0.15 for gun). |
 | **Temperature / Pressure** | Environmental factors for air density correction. |
-
+---
 ### Dynamic Columns (Splits)
 Any column with a **numeric header** is treated as a distance marker.
 * `5` -> Time at 5m
@@ -64,8 +61,7 @@ Any column with a **numeric header** is treated as a distance marker.
 * ...
 
 ---
-
-## Installation & Usage (from Source)
+### Installation & Usage (from Source)
 
 For developers running the raw Python script.
 
@@ -86,8 +82,7 @@ For developers running the raw Python script.
     ```
 
 ---
-
-## Tech Stack
+### Tech Stack
 
 * **Python 3**
 * **Pandas & OpenPyXL** for Excel I/O and data manipulation.

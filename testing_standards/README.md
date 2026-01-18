@@ -1,6 +1,6 @@
-# 🔬 Testing Standards
+# Testing Standards
 
-### About
+
 
 This directory contains tools designed to standardize biomechanical testing protocols across different athletes and equipment.
 

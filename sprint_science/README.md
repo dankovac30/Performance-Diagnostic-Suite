@@ -1,7 +1,5 @@
 # Sprint Science
 
-### About
-
 This directory contains the core computational engine for the `Performance-Diagnostic-Suite`.
 
 It is **not a runnable script** but a Python library intended to be imported by other applications. It consists of three interconnected modules that handle the biomechanics of sprinting:
@@ -29,18 +27,17 @@ The model executes an iterative physics simulation (`dt = 0.001s`) to generate a
 * **`f_v_profile_comparison()`:** Simulates multiple scenarios to find the optimal F-V slope ($S_{fv}$) for a specific distance (e.g., 100m).
 
 ---
-### 2. Sprint Profiling (`profilation.py`)
+### 2. Sprint Profiling (`profiler.py`)
 
-The `SprintProfilation` class solves the inverse problem: converting **raw time-speed data** into an athlete's physiological parameters ($F_0$, $V_0$, $P_{max}$).
+The profiling logic solves the inverse problem: converting track performance data—whether continuous or discrete—into an athlete's physiological parameters ($F_0$, $V_0$, $P_{max}$, $D_{RF}$).
 
 #### How it Works
-It uses **Least Squares Optimization** to fit modeled curves against observed field data.
-1.  **Input:** Continuous 1080 Sprint data.
-2.  **Optimization:** The algorithm adjusts $F_0$, $V_0$, and $\tau$ (tau) to minimize the error (RMSE) between the model and the real-world measurements.
-3.  **Output:** A high-precision F-V profile.
+The module implements a dual-mode modeling approach to fit modeled curves against observed field data:
 
-#### Key Methods
-* **`calculate_profile()`:** The main trigger. Fits the model to the provided splits and returns the optimal athlete parameters.
+1.  **Time-Speed Mode:** Designed for high-frequency data (e.g., 1080 Sprint, Radar). It uses least squares optimization to fit the velocity curve directly.
+2.  **Split-Time Mode:** Designed for timing gates (e.g., 5, 10, 20m splits). It utilizes Morin's Macroscopic Model to reconstruct the acceleration phase from limited distance-time points.
+
+In both cases, the algorithm iteratively adjusts $F_0$, $V_0$, and $\tau$ (tau) to minimize the error (RMSE) between the theoretical model and the real-world measurements.
 
 ---
 ### 3. Step Analysis (`step_analysis.py`)
@@ -105,7 +102,7 @@ print(f"Predicted Max Speed: {results['top_speed']:.2f} m/s")
 ```
 #### Example 2: Profiling (Inverse)
 ```python
-from sprint_simulator_core.profiler import SprintProfilation
+from sprint_simulator_core.profiler import SprintSpeedTimeProfiler
 
 # The 'splits' argument must be a pandas DataFrame 
 # containing spatiotemporal data with columns 'time' (s) and 'speed' (m/s).
@@ -118,7 +115,7 @@ spatiotemporal = pd.DataFrame({
 })
 
 # Calculate profile
-profiler = SprintProfilation(splits, weight=80.0, height=1.80)
+profiler = SprintSpeedTimeProfiler(splits, weight=80.0, height=1.80)
 profile = profiler.calculate_profile()
 
 print(f"Calculated F0: {profile['F0']:.2f} N/kg")
