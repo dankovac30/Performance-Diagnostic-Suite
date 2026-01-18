@@ -384,9 +384,9 @@ class SprintProcessor:
         # Apply row-wise processing
         self.complete_df[self.target_columns] = self.complete_df.apply(self.analyze_sprint, axis=1)
 
-        # Clear measurement data for non-testing runs
-        measurement_cols = ["weight", "height"]
-        self.complete_df.loc[training_mask, measurement_cols] = pd.NA
+        # Clear testing metadata for non-testing runs
+        testing_metadata = ["weight", "height", "side"]
+        self.complete_df.loc[training_mask, testing_metadata] = pd.NA
 
         # Flag sessions with full methodological integrity
         self.flag_publication_quality_sessions()
