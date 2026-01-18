@@ -37,6 +37,13 @@ class SprintProfilerApp:
         self.input_file = os.path.join(self.script_dir, self.input_name)
         self.output_file = os.path.join(self.script_dir, self.output_name)
 
+        # Enable terminal colours
+        if os.name == "nt":
+            import ctypes
+
+            kernel32 = ctypes.windll.kernel32
+            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+
         # Attempt to get terminal width for pretty printing
         try:
             self.terminal_width = os.get_terminal_size().columns
