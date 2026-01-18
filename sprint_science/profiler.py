@@ -73,9 +73,9 @@ class BaseSprintProfiler:
         df_cropped = df[(df["time"] >= 0.3) & (df["acceleration"] > 0.05)].copy()
 
         # Calculate Ratio of Force (RF)
-        df_cropped["RF"] = (
-            df_cropped["propulsion_force"] / np.sqrt(df_cropped["propulsion_force"] ** 2 + vertical_force**2)
-        ) * 100
+        df_cropped["RF"] = df_cropped["propulsion_force"] / np.sqrt(
+            df_cropped["propulsion_force"] ** 2 + vertical_force**2
+        )
 
         # Linear regression to find DRF
         reg_result = linregress(x=df_cropped["speed"], y=df_cropped["RF"])
@@ -452,15 +452,9 @@ class SprintSplitTimeProfiler(BaseSprintProfiler):
         model_distances_at_times = self.morin_distance_model(times, vmax, tau)
 
         ss_res = np.sum((distances - model_distances_at_times) ** 2)
-        ss_tot = np.sum((distances - np.mean(distances)) ** 2)
-
-        if ss_tot > 0:
-            model_adherence = 1 - (ss_res / ss_tot)
-        else:
-            model_adherence = 0
 
         params = {
-            "Model_Adherence": model_adherence,
+            "Sum Square diff": ss_res,
             "Tau": tau,
             "V_max": vmax,
             "distances": distances,
