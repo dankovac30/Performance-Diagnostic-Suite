@@ -297,18 +297,22 @@ class SprintProcessor:
                 - load_velocity_df: Session-aggregated Load-Velocity profiles.
         """
 
-        # Fetch Data
+        print("Syncing 1080 Motion data")
+        print("Downloading users")
         users, measurements = fetch_profiles(self.api_key, self.base_api_url, self.profiles_endpoint)
+        print(f"Downloaded {len(users)} users")
         fetched_runs = pd.DataFrame(
             fetch_training_data(
                 self.api_key, self.base_api_url, self.sessions_endpoint, self.training_endpoint, self.params
             )
         )
 
-        # Loading from local cache for development
-        # users = pd.read_pickle("dev/vendors/motion_1080/users.pkl")
-        # measurements = pd.read_pickle("dev/vendors/motion_1080/measurements.pkl")
-        # fetched_runs = pd.read_pickle("dev/vendors/motion_1080/runs.pkl")
+        if fetched_runs.empty:
+            print("No trials found for the selected timeframe")
+            print("1080 Motion processing completed")
+            return pd.DataFrame(), pd.DataFrame()
+
+        print(f"Processing {len(fetched_runs)} trials")
 
         # Merge runs with user data
         users_runs = pd.merge(
@@ -402,8 +406,10 @@ class SprintProcessor:
         load_velocity_df = self.calculate_load_velocity()
 
         # Final cleanup
-        final_df = self.complete_df.drop(  # edit later
-            columns=["client", "set_id", "id", "group", "date", "measurement_diff"]  # "displayName", "dateOfBirth",]
+        final_df = self.complete_df.drop(
+            columns=["client", "set_id", "id", "group", "date", "measurement_diff", "dateOfBirth"]
         )
+
+        print("1080 Motion processing completed!")
 
         return final_df, load_velocity_df

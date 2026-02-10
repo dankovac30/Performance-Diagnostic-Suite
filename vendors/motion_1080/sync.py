@@ -10,6 +10,7 @@ of the API and flat structures suitable for Pandas DataFrames.
 from typing import Any
 
 import pandas as pd
+from tqdm import tqdm
 
 from vendors.motion_1080.client import fetch_data
 
@@ -38,6 +39,9 @@ def fetch_profiles(api_key: str, base_url: str, endpoint: str) -> tuple[pd.DataF
 
     # Fetch data from the API
     data = fetch_data(api_key, base_url, endpoint)
+
+    if not data:
+        raise ValueError("No profiles to fetch from 1080 Motion")
 
     # Process user information
     df_user_info = pd.DataFrame(data)
@@ -95,7 +99,7 @@ def fetch_sessions(api_key: str, base_url: str, endpoint: str, params: dict[str,
     sessions = fetch_data(api_key, base_url, endpoint, params)
 
     # Extract just the IDs from the session
-    sessions_list = [s["id"] for s in sessions]
+    sessions_list = [s.get("id") for s in sessions]
 
     return sessions_list
 
@@ -125,10 +129,13 @@ def fetch_training_data(
     # Get the list of session IDs to process
     session_list = fetch_sessions(api_key, base_url, sessions_endpoint, params)
 
+    if not session_list:
+        return []
+
     fetched_runs = []
 
     # Iterate through each session and fetch detailed data
-    for session in session_list:
+    for session in tqdm(session_list, desc="Downloading sessions", unit="session"):
         # Construct the specific URL for this session
         session_endpoint = training_data_endpoint + session
 
