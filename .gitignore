@@ -25,3 +25,5 @@ venv/
 .env
 
 pyproject.toml
+
+vald_token.json
