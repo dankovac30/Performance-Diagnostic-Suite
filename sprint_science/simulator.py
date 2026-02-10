@@ -351,7 +351,11 @@ class SprintSimulation:
                         break
 
             fly_report = {
-                "fastest": {"time": fastest_time, "start": fastest_start_m, "finish": fastest_finish_m},
+                "fastest": {
+                    "time": fastest_time,
+                    "start": fastest_start_m,
+                    "finish": fastest_finish_m,
+                },
                 "first_fast": {
                     "time": fastest_time_rounded,
                     "start": fastest_start_m_rounded,
