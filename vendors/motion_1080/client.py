@@ -8,16 +8,14 @@ with the 1080 Motion Public API. It handles URL construction, header management
 
 import requests
 
-# The root URL for all 1080 Motion API endpoints
-BASE_URL = "https://publicapi.1080motion.com"
 
-
-def fetch_data(api_key: str, endpoint: str, params: dict = None) -> dict | list:
+def fetch_data(api_key: str, base_url: str, endpoint: str, params: dict = None) -> dict | list:
     """
     Executes a GET request against the 1080 Motion API.
 
     Args:
         api_key (str): The valid X-1080-API-Key provided by the vendor.
+        base_url (str): The root URL of the API service.
         endpoint (str): The specific API endpoint path (e.g., "/TrainingData/Session/").
         params (dict, optional): A dictionary of query parameters to append to the URL
 
@@ -25,7 +23,7 @@ def fetch_data(api_key: str, endpoint: str, params: dict = None) -> dict | list:
         dict | list: The parsed JSON response from the API.
     """
     # Construct the full URL
-    url = f"{BASE_URL}{endpoint}"
+    url = f"{base_url}{endpoint}"
 
     headers = {"X-1080-API-Key": api_key, "Content-Type": "application/json"}
 

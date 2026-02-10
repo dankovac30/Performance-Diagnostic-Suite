@@ -14,7 +14,7 @@ import pandas as pd
 from vendors.motion_1080.client import fetch_data
 
 
-def fetch_profiles(api_key: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def fetch_profiles(api_key: str, base_url: str, endpoint: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Fetches athlete profiles and their historical anthropometric measurements. This
     function retrieves the full client list, validates the existence and uniqueness
@@ -23,6 +23,8 @@ def fetch_profiles(api_key: str) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     Args:
         api_key (str): API key for authentication.
+        base_url (str): The root URL of the 1080 Motion API.
+        endpoint (str): Specific path to the profiles resource.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: A tuple containing two DataFrames:
@@ -33,10 +35,9 @@ def fetch_profiles(api_key: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         ValueError: If any user is missing an 'externalId' or if duplicate
                     'externalId's are found in the system.
     """
-    CLIENTS_URL = "/Client"
 
     # Fetch data from the API
-    data = fetch_data(api_key, CLIENTS_URL)
+    data = fetch_data(api_key, base_url, endpoint)
 
     # Process user information
     df_user_info = pd.DataFrame(data)
@@ -76,21 +77,22 @@ def fetch_profiles(api_key: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     return df_user_info, df_user_measurements
 
 
-def fetch_sessions(api_key: str, params: dict[str, Any] | None = None) -> list[str]:
+def fetch_sessions(api_key: str, base_url: str, endpoint: str, params: dict[str, Any] | None = None) -> list[str]:
     """
     Searches for and retrieves a list of session IDs based on filter parameters.
 
     Args:
         api_key (str): API key for authentication.
+        base_url (str): The root URL of the 1080 Motion API.
+        endpoint (str): Specific path to the sessions resource.
         params dict[str, Any] | None: Query parameters for filtering sessions
 
     Returns:
         list[str]: A list of unique session IDs (UUID strings).
     """
-    SESSIONS_URL = "/Session/Search"
 
     # Fetch data from the API
-    sessions = fetch_data(api_key, SESSIONS_URL, params)
+    sessions = fetch_data(api_key, base_url, endpoint, params)
 
     # Extract just the IDs from the session
     sessions_list = [s["id"] for s in sessions]
@@ -98,12 +100,20 @@ def fetch_sessions(api_key: str, params: dict[str, Any] | None = None) -> list[s
     return sessions_list
 
 
-def fetch_training_data(api_key: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def fetch_training_data(
+    api_key: str,
+    base_url: str,
+    sessions_endpoint: str,
+    training_data_endpoint: str,
+    params: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     """
     Fetches detailed training data (runs) for all available sessions.
 
     Args:
         api_key (str): API key for authentication.
+        base_url (str): The root URL of the 1080 Motion API.
+        endpoint (str): Specific path to the training data resource.
         params dict[str, Any] | None: Parameters passed to `fetch_sessions`
             to limit the scope of data (e.g., date range).
 
@@ -112,20 +122,20 @@ def fetch_training_data(api_key: str, params: dict[str, Any] | None = None) -> l
         a single run/sprint with flattened metadata and signal data.
     """
 
-    TRAINING_DATA_URL = "/TrainingData/Session/"
-
     # Get the list of session IDs to process
-    session_list = fetch_sessions(api_key, params)
+    session_list = fetch_sessions(api_key, base_url, sessions_endpoint, params)
 
     fetched_runs = []
 
     # Iterate through each session and fetch detailed data
     for session in session_list:
         # Construct the specific URL for this session
-        session_url = TRAINING_DATA_URL + session
+        session_endpoint = training_data_endpoint + session
 
         # Fetch specific session data
-        training = fetch_data(api_key, session_url, params={"includeSamples": "true", "filterMode": "None"})
+        training = fetch_data(
+            api_key, base_url, session_endpoint, params={"includeSamples": "true", "filterMode": "None"}
+        )
 
         # Flatten the JSON structure
         for training_set in training:

@@ -23,13 +23,16 @@ class SprintProcessor:
     5. Aggregates Load-Velocity profiles across sessions.
 
     Attributes:
-        api_key (str): Authentication key for the 1080 Motion API.
         params (dict): Optional parameters for the API request.
     """
 
     def __init__(self, params: dict[str, Any] | None = None):
-        self.api_key = Config.MOTION_API_KEY
         self.params = params
+        self.api_key = Config.MOTION_API_KEY
+        self.base_api_url = Config.MOTION_BASE_URL
+        self.profiles_endpoint = Config.MOTION_CLIENT_ENDPOINT
+        self.sessions_endpoint = Config.MOTION_SESSIONS_ENDPOINT
+        self.training_endpoint = Config.MOTION_TRAINING_DATA_ENDPOINT
 
     def extract_raw_metrics(self, row: pd.Series, sample: pd.DataFrame) -> dict[str, float]:
         """
@@ -295,8 +298,12 @@ class SprintProcessor:
         """
 
         # Fetch Data
-        users, measurements = fetch_profiles(self.api_key)
-        fetched_runs = pd.DataFrame(fetch_training_data(self.api_key, self.params))
+        users, measurements = fetch_profiles(self.api_key, self.base_api_url, self.profiles_endpoint)
+        fetched_runs = pd.DataFrame(
+            fetch_training_data(
+                self.api_key, self.base_api_url, self.sessions_endpoint, self.training_endpoint, self.params
+            )
+        )
 
         # Loading from local cache for development
         # users = pd.read_pickle("dev/vendors/motion_1080/users.pkl")
