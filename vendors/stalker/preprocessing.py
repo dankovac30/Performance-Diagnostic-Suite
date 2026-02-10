@@ -74,7 +74,7 @@ def reconstruct_start(spatiotemporal_data):
     profiler = SprintSpeedTimeProfiler(acceleratin_data, height=85, weight=190)
 
     # Fit Morin's model to extract macroscopic kinematic parameters
-    _, _, params = profiler.fit_morin(acceleratin_data["median_speed"], acceleratin_data["time"])
+    _, _, params = profiler.fit_velocity_model(acceleratin_data["median_speed"], acceleratin_data["time"])
 
     tau = params["Tau"]
     v_max = params["V_max"]
