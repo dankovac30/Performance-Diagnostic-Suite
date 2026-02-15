@@ -44,28 +44,40 @@ def fetch_profiles(api_key: str, base_url: str, endpoint: str) -> tuple[pd.DataF
         raise ValueError("No profiles to fetch from 1080 Motion")
 
     # Process user information
-    df_user_info = pd.DataFrame(data)
-    df_user_info = df_user_info[["id", "displayName", "dateOfBirth", "group", "externalId"]]
+    users_df = pd.DataFrame(data)
+    users_df = users_df[["id", "displayName", "dateOfBirth", "group", "externalId"]]
 
     # Check for missing External IDs
-    if not df_user_info["externalId"].notna().all():
-        missing_df = df_user_info[df_user_info["externalId"].isna()]
+    if not users_df["externalId"].notna().all():
+        missing_df = users_df[users_df["externalId"].isna()]
         na_id_username = missing_df["displayName"].tolist()
         error_message = f"Users {na_id_username} missing externalId"
         raise ValueError(error_message)
 
     # Check for duplicate External IDs
-    if df_user_info["externalId"].duplicated().any():
-        duplicate_df = df_user_info[df_user_info["externalId"].duplicated(keep=False)]
+    if users_df["externalId"].duplicated().any():
+        duplicate_df = users_df[users_df["externalId"].duplicated(keep=False)]
         duplicate_username = duplicate_df["displayName"].tolist()
         error_message = f"Users {duplicate_username} have duplicate external IDs"
         raise ValueError(error_message)
 
+    # Map API response fields to standardized internal schema
+    rename_map = {
+        "id": "motion_id",
+        "displayName": "athlete_name",
+        "dateOfBirth": "birth_date",
+        "externalId": "athlete_id",
+    }
+    users_df = users_df.rename(columns=rename_map)
+
+    # Convert birth dates to datetime objects
+    users_df["birth_date"] = pd.to_datetime(users_df["birth_date"]).dt.tz_localize(None)
+
     # Unpack the nested list of historical measurements for each user
-    user_measurements = []
+    user_biometrics = []
 
     for user in data:
-        external_id = user["externalId"]
+        athlete_id = user["externalId"]
         measurements = user["historicalMeasurements"]
 
         for record in measurements:
@@ -73,12 +85,16 @@ def fetch_profiles(api_key: str, base_url: str, endpoint: str) -> tuple[pd.DataF
             height = record["height"]
             weight = record["weight"]
 
-            measurement = {"externalId": external_id, "date": date, "height": height, "weight": weight}
-            user_measurements.append(measurement)
+            measurement = {"athlete_id": athlete_id, "measured_at": date, "height": height, "weight": weight}
+            user_biometrics.append(measurement)
 
-    df_user_measurements = pd.DataFrame(user_measurements)
+    biometrics_df = pd.DataFrame(user_biometrics)
 
-    return df_user_info, df_user_measurements
+    # Standardize timestamps to UTC and convert to local Prague time
+    biometrics_df["measured_at"] = pd.to_datetime(biometrics_df["measured_at"], format="ISO8601", utc=True)
+    biometrics_df["measured_at"] = biometrics_df["measured_at"].dt.tz_convert("Europe/Prague")
+
+    return users_df, biometrics_df
 
 
 def fetch_sessions(api_key: str, base_url: str, endpoint: str, params: dict[str, Any] | None = None) -> list[str]:
@@ -127,15 +143,15 @@ def fetch_training_data(
     """
 
     # Get the list of session IDs to process
-    session_list = fetch_sessions(api_key, base_url, sessions_endpoint, params)
+    sessions_list = fetch_sessions(api_key, base_url, sessions_endpoint, params)
 
-    if not session_list:
+    if not sessions_list:
         return []
 
-    fetched_runs = []
+    fetched_trials = []
 
     # Iterate through each session and fetch detailed data
-    for session in tqdm(session_list, desc="Downloading sessions", unit="session"):
+    for session in tqdm(sessions_list, desc="Downloading sessions", unit="session"):
         # Construct the specific URL for this session
         session_endpoint = training_data_endpoint + session
 
@@ -146,12 +162,12 @@ def fetch_training_data(
 
         # Flatten the JSON structure
         for training_set in training:
-            client = training_set["clientId"]
+            motion_id = training_set["clientId"]
             exercise = training_set["exerciseName"]
             session_id = training_set["setId"]
 
             for motion_group in training_set["motionGroups"]:
-                run_id = motion_group["id"]
+                trial_id = motion_group["id"]
                 side = motion_group["side"]
                 comment = motion_group.get("comment", "")
 
@@ -176,12 +192,12 @@ def fetch_training_data(
 
                     # Construct the flat dictionary
                     run_data = {
-                        "client": client,
-                        "set_id": session_id,
+                        "motion_id": motion_id,
+                        "session_id": session_id,
                         "exercise": exercise,
-                        "run_id": run_id,
-                        "run_created": created,
-                        "side": side,
+                        "trial_id": trial_id,
+                        "recorded_at": created,
+                        "starting_leg": side,
                         "comment": comment,
                         "total_distance": distance,
                         "total_time": time,
@@ -191,6 +207,6 @@ def fetch_training_data(
                         "sample_data": sample_data,
                     }
 
-                    fetched_runs.append(run_data)
+                    fetched_trials.append(run_data)
 
-    return fetched_runs
+    return fetched_trials

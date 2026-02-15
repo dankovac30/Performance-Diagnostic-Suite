@@ -6,6 +6,7 @@ It includes functions to retrieve athlete profiles and training data.
 """
 
 import time
+from typing import Any
 
 import pandas as pd
 import requests
@@ -39,22 +40,35 @@ def fetch_profiles(vald_token: str, tenant_id: str, url: str) -> pd.DataFrame:
 
     # Process user information
     users_info = data["profiles"]
-    df_user_info = pd.DataFrame(users_info)
-    df_user_info["displayName"] = df_user_info["givenName"].str.strip() + " " + df_user_info["familyName"].str.strip()
-    df_user_info = df_user_info[["profileId", "displayName", "dateOfBirth", "externalId"]]
-    df_user_info.dropna(subset=["externalId"], inplace=True)
+    users_df = pd.DataFrame(users_info)
+    users_df["athlete_name"] = users_df["givenName"].str.strip() + " " + users_df["familyName"].str.strip()
+    users_df = users_df[["profileId", "athlete_name", "dateOfBirth", "externalId"]]
+    users_df.dropna(subset=["externalId"], inplace=True)
 
     # Check for duplicate External IDs
-    if df_user_info["externalId"].duplicated().any():
-        duplicate_df = df_user_info[df_user_info["externalId"].duplicated(keep=False)]
-        duplicate_username = duplicate_df["displayName"].tolist()
+    if users_df["externalId"].duplicated().any():
+        duplicate_df = users_df[users_df["externalId"].duplicated(keep=False)]
+        duplicate_username = duplicate_df["athlete_name"].tolist()
         error_message = f"Users {duplicate_username} have duplicate external IDs"
         raise ValueError(error_message)
 
-    return df_user_info
+    # Map API response fields to standardized internal schema
+    rename_map = {
+        "profileId": "vald_id",
+        "dateOfBirth": "birth_date",
+        "externalId": "athlete_id",
+    }
+    users_df = users_df.rename(columns=rename_map)
+
+    # Convert birth dates to datetime objects
+    users_df["birth_date"] = pd.to_datetime(users_df["birth_date"]).dt.tz_localize(None)
+
+    return users_df
 
 
-def fetch_tests(vald_token: str, tenant_id: str, base_url: str, endpoint: str, params: dict = None) -> list:
+def fetch_tests(
+    vald_token: str, tenant_id: str, base_url: str, endpoint: str, params: dict = None
+) -> list[dict[str, Any]]:
     """
     Fetches a list of tests from the VALD API, iterates through API pages to retrieve
     all available tests matching the parameters.
@@ -67,14 +81,14 @@ def fetch_tests(vald_token: str, tenant_id: str, base_url: str, endpoint: str, p
         params (dict, optional): Query parameters for the API call (e.g., date range).
 
     Returns:
-        list: A list of dictionaries, where each dictionary represents a test.
+        list[dict[str, Any]]: A list of dictionaries, where each dictionary represents a test.
     """
     url = base_url + endpoint
 
     # Create a copy of params to avoid modifying the original dictionary reference
     current_params = params.copy() if params else {}
 
-    tests_dict_list = []
+    tests_list = []
 
     # Safety limit: max 100 pages to prevent infinite loops
     for _ in range(100):
@@ -86,7 +100,7 @@ def fetch_tests(vald_token: str, tenant_id: str, base_url: str, endpoint: str, p
         if not batch:
             break
 
-        tests_dict_list.extend(batch)
+        tests_list.extend(batch)
 
         # Find the latest modification date in the current batch.
         last_test_date = max([t["modifiedDateUtc"] for t in batch])
@@ -99,7 +113,7 @@ def fetch_tests(vald_token: str, tenant_id: str, base_url: str, endpoint: str, p
         # Update params for the next iteration
         current_params["ModifiedFromUtc"] = new_start_date
 
-    return tests_dict_list
+    return tests_list
 
 
 def fetch_force_decks_trials_data(
@@ -110,7 +124,7 @@ def fetch_force_decks_trials_data(
     tests_endpoint: str,
     trials_endpoint: str,
     params: dict = None,
-) -> pd.DataFrame:
+) -> list[dict[str, Any]]:
     """
     Fetches and processes trial data specifically for ForceDecks.
 
@@ -125,27 +139,27 @@ def fetch_force_decks_trials_data(
         params (dict, optional): Query parameters.
 
     Returns:
-        pd.DataFrame: A DataFrame containing detailed metrics for every rep.
+        list[dict[str, Any]]: A list of dictionaries, where each dictionary represents single rep.
     """
     # Get the list of test sessions
-    tests = fetch_tests(vald_token, tenant_id, base_url, tests_endpoint, params)
+    tests_list = fetch_tests(vald_token, tenant_id, base_url, tests_endpoint, params)
 
-    if not tests:
-        return pd.DataFrame()
+    if not tests_list:
+        return []
 
-    all_trials = []
+    fetched_trials = []
 
     # Get into each test to get trial data
-    for test in tqdm(tests, desc="Downloading tests", unit="test"):
+    for test in tqdm(tests_list, desc="Downloading tests", unit="test"):
         # Extract Test Metadata
-        client = test["profileId"]
-        test_id = test["testId"]
-        test_type = test["testType"]
+        vald_id = test["profileId"]
+        session_id = test["testId"]
+        exercise = test["testType"]
         test_created = test["recordedDateUtc"]
         base_time = pd.to_datetime(test_created)
 
         # Construct URL for this test's trials
-        current_endpoint = trials_endpoint.format(team_uid=team_uid, test_id=test_id)
+        current_endpoint = trials_endpoint.format(team_uid=team_uid, test_id=session_id)
         url = f"{base_url}{current_endpoint}"
 
         # Fetch trial data with retry logic
@@ -166,18 +180,17 @@ def fetch_force_decks_trials_data(
             # Calculate precise timestamp for the specific rep
             start_time = trial["startTime"]
             offset = pd.to_timedelta(start_time, unit="s")
-            id_time = base_time + offset
+            rep_time = base_time + offset
 
             # Format timestamp
-            id_time_str = id_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            rep_time_str = rep_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
             # Initialize the result row with metadata
             result_dict = {
-                "athlete_id": client,
-                "test_id": test_id,
-                "test_type": test_type,
-                "created": test_created,
-                "id_time": id_time_str,
+                "vald_id": vald_id,
+                "session_id": session_id,
+                "exercise": exercise,
+                "recorded_at": rep_time_str,
                 "laterality": laterality,
             }
 
@@ -199,11 +212,9 @@ def fetch_force_decks_trials_data(
                 if limb == "Right":
                     result_dict[f"{result_id}_R"] = result_value
 
-            all_trials.append(result_dict)
+            fetched_trials.append(result_dict)
 
-    df = pd.DataFrame(all_trials)
-
-    return df
+    return fetched_trials
 
 
 def fetch_force_frame_nord_bord_trials_data(
@@ -212,7 +223,7 @@ def fetch_force_frame_nord_bord_trials_data(
     base_url: str,
     tests_endpoint: str,
     params: dict = None,
-) -> list:
+) -> list[dict[str, Any]]:
     """
     Fetches trial data for ForceFrame and NordBord devices.
 
@@ -224,7 +235,7 @@ def fetch_force_frame_nord_bord_trials_data(
         params (dict, optional): Query parameters.
 
     Returns:
-        list: A list of test dictionaries containing trial results.
+        list[dict[str, Any]]: A list of test dictionaries containing test results.
     """
     # Retrieve tests data
     tests = fetch_tests(vald_token, tenant_id, base_url, tests_endpoint, params)
