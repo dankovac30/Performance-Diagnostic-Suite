@@ -5,11 +5,9 @@ This module handles the extraction and transformation of data from the VALD API.
 It includes functions to retrieve athlete profiles and training data.
 """
 
-import time
 from typing import Any
 
 import pandas as pd
-import requests
 from tqdm import tqdm
 
 from vendors.vald.client import fetch_data
@@ -162,13 +160,8 @@ def fetch_force_decks_trials_data(
         current_endpoint = trials_endpoint.format(team_uid=team_uid, test_id=session_id)
         url = f"{base_url}{current_endpoint}"
 
-        # Fetch trial data with retry logic
-        try:
-            trials = fetch_data(vald_token, tenant_id, url)
-
-        except requests.exceptions.ReadTimeout:
-            time.sleep(5)
-            trials = fetch_data(vald_token, tenant_id, url)
+        # Fetch trial data
+        trials = fetch_data(vald_token, tenant_id, url)
 
         # Process each individual trial (rep) within the test
         for trial in trials:
