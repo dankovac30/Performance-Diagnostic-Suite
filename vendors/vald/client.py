@@ -2,11 +2,23 @@
 VALD API Client Module.
 
 This module provides the low-level HTTP client functionality for interacting
-with the VALD Public API. It handles header management and basic error handling
+with the VALD Public API. It handles header management and error handling
 for network requests.
 """
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+SESSION = requests.Session()
+
+RETRY_STRATEGY = Retry(
+    total=3,
+    backoff_factor=1,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+)
+SESSION.mount("https://", HTTPAdapter(max_retries=RETRY_STRATEGY))
 
 
 def fetch_data(vald_token: str, tenant_id: str, url: str, params: dict = None) -> dict | list:
@@ -35,7 +47,7 @@ def fetch_data(vald_token: str, tenant_id: str, url: str, params: dict = None) -
     headers = {"Authorization": f"Bearer {vald_token}", "Accept": "application/json"}
 
     try:
-        response = requests.get(url, headers=headers, params=params, timeout=60)
+        response = SESSION.get(url, headers=headers, params=params, timeout=60)
 
         if response.status_code == 200:
             data = response.json()
@@ -44,8 +56,12 @@ def fetch_data(vald_token: str, tenant_id: str, url: str, params: dict = None) -
             data = {"tests": []}
 
         else:
-            error_message = f"API Error {response.status_code} loading {url}: {response.text}"
-            raise ValueError(error_message)
+            response.raise_for_status()
+
+    except requests.exceptions.HTTPError as e:
+        error_message = f"API Error {response.status_code} loading {url}: {response.text}"
+        print(error_message)
+        raise ValueError(error_message) from e
 
     except Exception as e:
         print(f"Error loading {url}: {e}")

@@ -7,6 +7,18 @@ with the 1080 Motion Public API. It handles URL construction, header management
 """
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+SESSION = requests.Session()
+
+RETRY_STRATEGY = Retry(
+    total=3,
+    backoff_factor=1,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+)
+SESSION.mount("https://", HTTPAdapter(max_retries=RETRY_STRATEGY))
 
 
 def fetch_data(api_key: str, base_url: str, endpoint: str, params: dict = None) -> dict | list:
@@ -28,14 +40,17 @@ def fetch_data(api_key: str, base_url: str, endpoint: str, params: dict = None) 
     headers = {"X-1080-API-Key": api_key, "Content-Type": "application/json"}
 
     try:
-        response = requests.get(url, headers=headers, params=params)
+        response = SESSION.get(url, headers=headers, params=params, timeout=60)
+
+        response.raise_for_status()
 
         if response.status_code == 200:
             data = response.json()
 
-        else:
-            error_message = f"API Error {response.status_code} loading {endpoint}: {response.text}"
-            raise ValueError(error_message)
+    except requests.exceptions.HTTPError as e:
+        error_message = f"API Error {response.status_code} loading {endpoint}: {response.text}"
+        print(error_message)
+        raise ValueError(error_message) from e
 
     except Exception as e:
         print(f"Error loading {endpoint}: {e}")
